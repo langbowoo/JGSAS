@@ -395,7 +395,6 @@ Mobile PWA HTML App
       <div style="margin-bottom:10px;display:flex;gap:4px">
         <button class="btn btn-warn" id="resetExtractBtn" style="flex:1;padding:7px 8px;font-size:11px;border-radius:10px">추출리셋</button>
         <button class="btn btn-primary" id="saveAndSendBtn" style="flex:1;padding:7px 8px;font-size:11px;border-radius:10px;white-space:nowrap">저장 후 문자</button>
-        <button class="btn" id="saveAndSendKakaoBtn2" style="flex:1;background:#FEE500;color:#3A1D1D;font-weight:800;padding:7px 8px;font-size:11px;border-radius:10px;white-space:nowrap">저장 후 카톡</button>
       </div>
       <div id="draftList" class="contact-list"></div>
       <div id="draftEmpty" class="empty">아직 추출된 명단이 없습니다.</div>
@@ -428,7 +427,6 @@ Mobile PWA HTML App
         <button class="btn btn-warn" id="markManualSentBtn">✅ 확인도장</button>
         <button class="btn btn-ghost" id="copyMessageBtn">문자 내용 복사</button>
         <button class="btn btn-success" id="markCurrentSentBtn" disabled>다음문자</button>
-        <button class="btn" id="kakaoSendBtn" style="background:#FEE500;color:#3A1D1D;font-weight:800">카톡보내기</button>
       </div>
     </div>
 
@@ -437,7 +435,6 @@ Mobile PWA HTML App
       <div id="queueCurrent" class="empty">발송을 시작하면 현재 대상이 표시됩니다.</div>
       <div class="btn-row" style="margin-top:10px">
         <button class="btn btn-success" id="sendCurrentBtn" disabled style="display:none">현재 대상 문자 앱 열기</button>
-        <button class="btn" id="kakaoCurrentBtn" disabled style="display:none;background:#FEE500;color:#3A1D1D;font-weight:800">💬 카카오톡</button>
         <button class="btn btn-danger" id="markCurrentFailBtn" disabled style="display:none">실패 처리 후 다음</button>
         <button class="btn btn-ghost" id="markCurrentPendingBtn" disabled style="display:none">미발송 처리 후 다음</button>
       </div>
@@ -2322,13 +2319,12 @@ function renderQueue(){
   const sentBtn = document.getElementById('markCurrentSentBtn');
   const failBtn = document.getElementById('markCurrentFailBtn');
   const pendingBtn = document.getElementById('markCurrentPendingBtn');
-  const kakaoBtn = document.getElementById('kakaoCurrentBtn');
 
   if(!hasQueue){
     container.className = 'empty';
     container.textContent = '발송을 시작하면 현재 대상이 표시됩니다.';
     document.getElementById('queueInfo').textContent = currentQueue.ids.length ? '완료' : '대기';
-    [sendBtn,sentBtn,failBtn,pendingBtn,kakaoBtn].forEach(b=>b.disabled=true);
+    [sendBtn,sentBtn,failBtn,pendingBtn].forEach(b=>b.disabled=true);
     return;
   }
 
@@ -2364,7 +2360,7 @@ function renderQueue(){
       <div style="font-size:11px;color:var(--accent2);font-weight:800;margin-bottom:4px">완료 ${doneCount}명</div>
       ${sentListHtml}
     </div>` : ''}`;
-  [sendBtn,sentBtn,failBtn,pendingBtn,kakaoBtn].forEach(b=>b.disabled=false);
+  [sendBtn,sentBtn,failBtn,pendingBtn].forEach(b=>b.disabled=false);
 }
 
 function openSmsForCurrent(){
@@ -2604,7 +2600,6 @@ function openDetailModal(groupId, contactId){
 
   document.getElementById('detailModalActions').innerHTML = `
     <a class="btn btn-ghost" href="tel:${contact.phone}" style="flex:1;text-decoration:none">전화</a>
-    <button class="btn" style="flex:1;background:#FEE500;color:#3A1D1D;font-weight:800" onclick="openKakaoForContact('${groupId}','${contactId}')">카카오톡</button>
     <button class="btn btn-primary" style="flex:1" onclick="saveContactToPhone('${contactId}','${groupId}')">폰에저장</button>
     <button class="btn btn-success" style="flex:1" onclick="setHappyCall('${groupId}','${contactId}',true);closeDetailModal()">해피콜 완료</button>
     <button class="btn btn-ghost"   style="flex:1" onclick="setHappyCall('${groupId}','${contactId}',false);closeDetailModal()">해피콜 보류</button>
@@ -2763,10 +2758,7 @@ function bindEvents(){
   document.getElementById('smsTemplateSelect').addEventListener('change', renderSmsArea);
   document.getElementById('startSendBtn').addEventListener('click', () => { if(buildQueue()){ openSmsForCurrent(); } });
   document.getElementById('sendCurrentBtn').addEventListener('click', openSmsForCurrent);
-  document.getElementById('kakaoCurrentBtn').addEventListener('click', openKakaoForCurrent);
   document.getElementById('markCurrentSentBtn').addEventListener('click', ()=>advanceQueue('success'));
-  document.getElementById('saveAndSendKakaoBtn2').addEventListener('click', saveGroupAndGoKakao);
-  document.getElementById('kakaoSendBtn').addEventListener('click', () => { if(currentQueue.index >= 0) { openKakaoForCurrent(); } else if(buildQueue()) { openKakaoForCurrent(); } });
   document.getElementById('markCurrentFailBtn').addEventListener('click', ()=>advanceQueue('fail'));
   document.getElementById('markCurrentPendingBtn').addEventListener('click', ()=>advanceQueue('pending'));
   document.getElementById('markManualSentBtn').addEventListener('click', markAllManualSent);
