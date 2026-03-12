@@ -394,8 +394,8 @@ Mobile PWA HTML App
       </div>
       <div style="margin-bottom:10px;display:flex;gap:4px">
         <button class="btn btn-warn" id="resetExtractBtn" style="flex:1;padding:7px 8px;font-size:11px;border-radius:10px">추출리셋</button>
-        <button class="btn btn-primary" id="saveAndSendBtn" style="flex:1;padding:7px 8px;font-size:11px;border-radius:10px;white-space:nowrap">저장 후 문자 보내기</button>
-        <button class="btn" id="saveAndSendKakaoBtn2" style="flex:1;background:#FEE500;color:#3A1D1D;font-weight:800;padding:7px 8px;font-size:11px;border-radius:10px;white-space:nowrap">저장 후 카톡 보내기</button>
+        <button class="btn btn-primary" id="saveAndSendBtn" style="flex:1;padding:7px 8px;font-size:11px;border-radius:10px;white-space:nowrap">저장 후 문자</button>
+        <button class="btn" id="saveAndSendKakaoBtn2" style="flex:1;background:#FEE500;color:#3A1D1D;font-weight:800;padding:7px 8px;font-size:11px;border-radius:10px;white-space:nowrap">저장 후 카톡</button>
       </div>
       <div id="draftList" class="contact-list"></div>
       <div id="draftEmpty" class="empty">아직 추출된 명단이 없습니다.</div>
@@ -736,7 +736,7 @@ const APP_META = {
   githubReleaseNote: 'v4: 날씨 입력 UI, 출발일 버그 수정, 추가메모 레이아웃 최적화, 상단 UI 통합'
 };
 
-const DEFAULT_DEPARTURE_TEMPLATE = `안녕하세요! {이름}님 😊\n{출발일}({출발일요일}) {여행지} {기간} 여행을 안내하게 된 가이드 {가이드}입니다.\n안전하고 즐거운 여행을 위해 아래 안내사항을 꼭 정독해 주세요.\n대표자분께만 안내 문자를 드리오니 일행분들과 꼭 공유해 주시기 바랍니다.\n\n📍 공항 미팅 안내\n· 일시: {출발일}({출발일요일})  {미팅시간} {미팅장소}\n· 피켓명: {여행사} 🚩\n\n✈️ 항공 정보\n· 출국: {출국편}(한국 출발)\n· 귀국: {귀국편}(현지 출발)\n· 수하물: 1인당 15kg (무료 위탁 기준)\n\n🌤️ 현지 날씨 및 준비물\n· 기온: {최저기온} ~ {최고기온}도\n· 날씨: {날씨}\n· 전압: 110V 돼지코 어댑터 필수\n· 환전: 엔화 현금 (작은 상점들은 현금만 가능)\n· 카드: 해외 결제 가능한 VISA, Master 등 비상용 카드\n· 기타: 선크림, 선글라스, 모자, 개인 상비약 💊\n· 샴푸·린스·칫솔·헤어 드라이기 등은 호텔에 비치됨\n· 온천 이용 시 별도 준비물 없음\n· 다이슨 드라이기 등 고전력 기기는 작동하지 않습니다\n\n📋 입국 서류: 가이드가 준비하여 공항 미팅 시 나눠드립니다. 별도 준비 불필요!\n\n🏨 호텔 정보\n· 호텔명: {호텔명}\n· 연락처: {호텔전화}\n\n⚠️ 중요 주의사항 (필독!)\n1. 한국에서 가져가시는 과일·육포 등 농수산물은 일본 세관 통과 불가 🚫\n2. 최근 일본 입국시 세관에서 금 제품및 고가의 반입 품목에 대한 조사가 매우 엄격히 시행 중입니다. 금목걸이·팔찌 등 고가 귀금속은 집에 두고 오시길 추천드립니다.\n3. 외부 음식: 현지 호텔 식당은 외부 식음료 반입 금지 🚫\n4. 보조배터리 및 전자담배 기내반입 절차  https://bit.ly/4llTm5G\n\n내일 해피콜로  연락드리겠습니다. 설레는 여행 준비 되세요! 🌸\n가이드 {가이드} {가이드연락처}`;
+const DEFAULT_DEPARTURE_TEMPLATE = `안녕하세요! {이름}님 😊\n{출발일}({출발일요일}) {여행지} {기간} 여행을 안내하게 된 가이드 {가이드}입니다.\n안전하고 즐거운 여행을 위해 아래 안내사항을 꼭 정독해 주세요.\n대표자분께만 안내 문자를 드리오니 일행분들과 꼭 공유해 주시기 바랍니다.\n\n📍 공항 미팅 안내\n· 일시: {출발일}({출발일요일})  {미팅시간} {미팅장소}\n· 피켓명: {여행사} ✅\n\n✈️ 항공 정보\n· 출국: {출국편}(한국 출발)\n· 귀국: {귀국편}(현지 출발)\n· 수하물: 1인당 15kg (무료 위탁 기준)\n\n🌤️ 현지 날씨 및 준비물\n· 기온: {최저기온} ~ {최고기온}도\n· 날씨: {날씨}\n· 전압: 110V 돼지코 어댑터 필수\n· 환전: 엔화 현금 (작은 상점들은 현금만 가능)\n· 카드: 해외 결제 가능한 VISA, Master 등 비상용 카드\n· 기타: 선크림, 선글라스, 모자, 개인 상비약 💊\n· 샴푸·린스·칫솔·헤어 드라이기 등은 호텔에 비치됨\n· 온천 이용 시 별도 준비물 없음\n· 다이슨 드라이기 등 고전력 기기는 작동하지 않습니다\n\n📋 입국 서류: 가이드가 준비하여 공항 미팅 시 나눠드립니다. 별도 준비 불필요!\n\n🏨 호텔 정보\n· 호텔명: {호텔명}\n· 연락처: {호텔전화}\n\n⚠️ 중요 주의사항 (필독!)\n1. 한국에서 가져가시는 과일·육포 등 농수산물은 일본 세관 통과 불가 🚫\n2. 최근 일본 입국시 세관에서 금 제품및 고가의 반입 품목에 대한 조사가 매우 엄격히 시행 중입니다. 금목걸이·팔찌 등 고가 귀금속은 집에 두고 오시길 추천드립니다.\n3. 외부 음식: 현지 호텔 식당은 외부 식음료 반입 금지 🚫\n4. 보조배터리 및 전자담배 기내반입 절차  https://bit.ly/4llTm5G\n\n내일 해피콜로  연락드리겠습니다. 설레는 여행 준비 되세요! 🌸\n가이드 {가이드} {가이드연락처}`;
 
 const DEFAULT_TEMPLATE = {
   id: 'default-departure-notice',
@@ -2255,7 +2255,16 @@ function renderSmsArea(){
   document.getElementById('smsTargetCount').textContent = `${group?.contacts?.length || 0}명`;
   document.getElementById('smsGroupSummary').textContent = group ? `${group.title} / ${group.travelInfo.agency || '-'} / ${group.contacts.length}명` : '저장된 그룹이 없습니다.';
   const preview = resolveTags(currentSmsTemplate().content, { group });
-  document.getElementById('smsPreview').textContent = preview;
+  // 미리보기 강조 표시 (실제 전송 내용과 무관, 화면 표시용)
+  const highlighted = escapeHtml(preview)
+    .replace(/(\S+님)/g, '<strong style="font-size:15px">$1</strong>')
+    .replace(/(가이드 )(\S+)(입니다)/g, '$1<strong style="font-size:15px">$2</strong>$3')
+    .replace(/(가이드연락처[^\n]*|가이드 \S+ \d[\d\-]+)/g, '<strong style="font-size:15px">$1</strong>')
+    .replace(/(\d{1,2}\.\d{1,2}|\d{4}-\d{2}-\d{2})(\([가-힣]\))?/g, '<strong style="font-size:15px">$1$2</strong>')
+    .replace(/(오전|오후)\s*\d{1,2}:\d{2}/g, '<strong style="font-size:15px;letter-spacing:0.03em;color:#ffe082">$&</strong>')
+    .replace(/(터미널|층|카운터|게이트|앞|입구)[^\n]*/g, '<strong style="font-size:15px;letter-spacing:0.03em;color:#ffe082">$&</strong>')
+    .replace(/✅/g, '<span style="color:#69f0ae">✅</span>');
+  document.getElementById('smsPreview').innerHTML = highlighted;
   document.getElementById('charInfo').textContent = `${preview.length}자 · ${preview.length <= 90 ? 'SMS' : 'MMS 가능성'}`;
 }
 
@@ -2390,6 +2399,33 @@ function openKakaoForCurrent(){
   a.style.display = 'none';
   document.body.appendChild(a); a.click(); setTimeout(()=>a.remove(), 200);
   showToast('💬 카카오톡 열림 · 내용을 붙여넣기 하세요', 'info');
+}
+
+function saveContactToPhone(contactId, groupId){
+  const group = findGroup(groupId);
+  const contact = group?.contacts.find(c => c.id === contactId);
+  if(!contact){ showToast('연락처를 찾을 수 없습니다','error'); return; }
+  const phone = contact.phone.replace(/-/g,'');
+  const info = group?.travelInfo || {};
+  // 출발일: 어떤 형식이든 MM-DD 로 통일 (예: 2026-03-20 → 03-20, 3.20 → 03-20)
+  const rawDate = info.depDate || '';
+  const dateMatch = rawDate.match(/(\d{1,2})[.\-\/](\d{1,2})/);
+  const fmtDate = dateMatch ? `${String(dateMatch[1]).padStart(2,'0')}-${String(dateMatch[2]).padStart(2,'0')}` : (rawDate || '-');
+  // 기간: 4박5일 → 5일, 5일 → 5일, 5 → 5일
+  const rawDur = info.duration || '';
+  const durMatch = rawDur.match(/(\d+)일/) || rawDur.match(/(\d+)$/);
+  const fmtDur = durMatch ? `${durMatch[1]}일` : (rawDur || '-');
+  const note = `출발일: ${fmtDate} / 여행지: ${info.destination || '-'} / 기간: ${fmtDur} / 여행사: ${info.agency || '-'}`;
+  const vcard = `BEGIN:VCARD\nVERSION:3.0\nFN:${contact.name}\nTEL;TYPE=CELL:${phone}\nNOTE:${note}\nEND:VCARD`;
+  const blob = new Blob([vcard], {type:'text/vcard'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${contact.name}.vcf`;
+  a.style.display = 'none';
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 300);
+  showToast(`${contact.name} 연락처 저장 중...`, 'success');
 }
 
 function openKakaoForContact(groupId, contactId){
@@ -2529,6 +2565,7 @@ function renderManagePage(){
             <div class="cc-name">${escapeHtml(contact.name)}</div>
             <div class="cc-phone">${escapeHtml(contact.phone)}</div>
             <div class="cc-badges">${sendBadge}${happyBadge}${dupBadge}</div>
+            <button class="btn btn-primary" style="width:100%;margin-top:8px;padding:5px;font-size:11px;border-radius:8px" onclick="event.stopPropagation();saveContactToPhone('${contact.id}','${group.id}')">폰에저장</button>
           </div>`;
         }).join('')}
         </div>
@@ -2566,8 +2603,9 @@ function openDetailModal(groupId, contactId){
   `;
 
   document.getElementById('detailModalActions').innerHTML = `
-    <a class="btn btn-ghost" href="tel:${contact.phone}" style="flex:1;text-decoration:none">📞 전화</a>
-    <button class="btn" style="flex:1;background:#FEE500;color:#3A1D1D;font-weight:800" onclick="openKakaoForContact('${groupId}','${contactId}')">💬 카카오톡</button>
+    <a class="btn btn-ghost" href="tel:${contact.phone}" style="flex:1;text-decoration:none">전화</a>
+    <button class="btn" style="flex:1;background:#FEE500;color:#3A1D1D;font-weight:800" onclick="openKakaoForContact('${groupId}','${contactId}')">카카오톡</button>
+    <button class="btn btn-primary" style="flex:1" onclick="saveContactToPhone('${contactId}','${groupId}')">폰에저장</button>
     <button class="btn btn-success" style="flex:1" onclick="setHappyCall('${groupId}','${contactId}',true);closeDetailModal()">해피콜 완료</button>
     <button class="btn btn-ghost"   style="flex:1" onclick="setHappyCall('${groupId}','${contactId}',false);closeDetailModal()">해피콜 보류</button>
   `;
