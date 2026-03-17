@@ -2815,9 +2815,7 @@ function _buildGroupListHtml(){
     </div>`).join('');
 }
 
-function _bindGroupListEvents(overlay){
-  const closeBtn = overlay.querySelector('#_kpiGroupClose');
-  if(closeBtn) closeBtn.addEventListener('click', ()=> overlay.remove());
+function _bindGroupListDeleteBtns(overlay){
   overlay.querySelectorAll('button[data-delid]').forEach(btn => {
     btn.addEventListener('click', ()=>{
       const gid = btn.dataset.delid;
@@ -2848,10 +2846,16 @@ function _bindGroupListEvents(overlay){
         if(inner) inner.innerHTML = _buildGroupListHtml();
         const titleEl = overlay.querySelector('#_kpiGroupTitle');
         if(titleEl) titleEl.textContent = '전체 그룹 (' + state.savedGroups.length + ')';
-        _bindGroupListEvents(overlay);
+        _bindGroupListDeleteBtns(overlay);
       });
     });
   });
+}
+
+function _bindGroupListEvents(overlay){
+  const closeBtn = overlay.querySelector('#_kpiGroupClose');
+  if(closeBtn) closeBtn.addEventListener('click', ()=> overlay.remove());
+  _bindGroupListDeleteBtns(overlay);
 }
 
 function showKpiDetail(type){
@@ -3315,11 +3319,25 @@ function bindEvents(){
       });
       if(matched.length){
         const target = matched[0];
-        if(confirm(`"${target.title}" 그룹의 명단 ${target.contacts.length}명을 전체 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)){
+        const _cfm2 = document.createElement('div');
+        _cfm2.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
+        _cfm2.innerHTML = `
+          <div style="background:#1e1e2e;border-radius:16px;padding:24px 20px;max-width:290px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.5)">
+            <div style="font-size:15px;font-weight:800;color:var(--text1);margin-bottom:8px">"${escapeHtml(target.title)}"</div>
+            <div style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.5">명단 ${target.contacts.length}명을 전체 삭제하시겠습니까?<br>이 작업은 되돌릴 수 없습니다.</div>
+            <div style="display:flex;gap:8px">
+              <button id="_cfm2Cancel" style="flex:1;padding:11px;border-radius:10px;border:none;background:var(--surface3);color:var(--text2);font-size:14px;font-weight:700;cursor:pointer">취소</button>
+              <button id="_cfm2Ok" style="flex:1;padding:11px;border-radius:10px;border:none;background:#f87171;color:#fff;font-size:14px;font-weight:700;cursor:pointer">삭제</button>
+            </div>
+          </div>`;
+        document.body.appendChild(_cfm2);
+        _cfm2.querySelector('#_cfm2Cancel').addEventListener('click', ()=> _cfm2.remove());
+        _cfm2.querySelector('#_cfm2Ok').addEventListener('click', ()=>{
           target.contacts = [];
           saveState(); renderManagePage(); renderSmsArea();
           showToast(`"${target.title}" 명단 전체 삭제 완료`, 'info');
-        }
+          _cfm2.remove();
+        });
       } else {
         showToast('검색 결과가 없습니다', 'error');
       }
