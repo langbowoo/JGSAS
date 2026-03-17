@@ -2294,13 +2294,29 @@ function saveGroupAndGoSms(){
   normalizeTravelInfoFromForm();
   const info = state.currentTravelInfo;
   // 필수 입력 검증 (extraMemo 제외, 13개)
-  const required = ['depDate','destination','duration','agency','flightOut','flightIn','meetingTime','meetingPlace','hotelName','hotelPhone','weatherMin','weatherMax','weatherNotice'];
-  const missing = required.some(f => !info[f]);
-  if(missing){
+  const requiredFields = [
+    {key:'depDate',      label:'출발일'},
+    {key:'destination',  label:'여행지'},
+    {key:'duration',     label:'여행 기간'},
+    {key:'agency',       label:'여행사'},
+    {key:'flightOut',    label:'출국편'},
+    {key:'flightIn',     label:'귀국편'},
+    {key:'meetingTime',  label:'미팅 시간'},
+    {key:'meetingPlace', label:'미팅 장소'},
+    {key:'hotelName',    label:'호텔명'},
+    {key:'hotelPhone',   label:'호텔 전화'},
+    {key:'weatherMin',   label:'최저기온'},
+    {key:'weatherMax',   label:'최고기온'},
+    {key:'weatherNotice',label:'날씨 안내'},
+  ];
+  const missingFields = requiredFields.filter(f => !info[f.key]);
+  if(missingFields.length){
+    const listHtml = missingFields.map(f => `<div style="padding:4px 0;font-size:13px;color:#ffd3d3">• ${f.label}</div>`).join('');
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center';
     overlay.innerHTML = `<div style="background:#1e1e2e;border-radius:16px;padding:28px 24px;max-width:300px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.5)">
-      <div style="color:#f87171;font-size:20px;font-weight:900;margin-bottom:18px;line-height:1.4">여행정보를<br>완성하세요</div>
+      <div style="color:#f87171;font-size:16px;font-weight:900;margin-bottom:14px">아래 항목을 입력해주세요</div>
+      <div style="text-align:left;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:10px;padding:10px 14px;margin-bottom:18px">${listHtml}</div>
       <button style="background:#4f8ef7;color:#fff;border:none;border-radius:10px;padding:10px 32px;font-size:15px;font-weight:700;cursor:pointer" onclick="this.closest('div[style*=fixed]').remove()">확인</button>
     </div>`;
     document.body.appendChild(overlay);
@@ -2906,17 +2922,34 @@ function showKpiDetail(type){
   } else if(type === 'vcf'){
     // 연락처 저장: 그룹 목록 + 저장 버튼 + 이력을 전용 팝업으로 처리
     window._deleteVcfLog = function(id) {
-      state.vcfLogs = state.vcfLogs.filter(l => l.id !== id);
+      state.vcfLogs = state.vcfLogs.filter(function(l){ return l.id !== id; });
       saveState();
-      document.getElementById('_vcfOverlay')?.remove();
-      showKpiDetail('vcf');
+      var row = document.getElementById('_vcfLog_' + id);
+      if(row) row.remove();
+      if(!state.vcfLogs.length){
+        var c = document.getElementById('_vcfHistContainer');
+        if(c) c.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:8px 0">이력 없음</div>';
+      }
     };
     window._clearAllVcfLogs = function() {
-      if(!confirm('저장 이력을 모두 삭제할까요?')) return;
-      state.vcfLogs = [];
-      saveState();
-      document.getElementById('_vcfOverlay')?.remove();
-      showKpiDetail('vcf');
+      var cfm = document.createElement('div');
+      cfm.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10001;display:flex;align-items:center;justify-content:center';
+      cfm.innerHTML = '<div style="background:#1e1e2e;border-radius:16px;padding:24px 20px;width:80%;max-width:300px;text-align:center">'
+        + '<div style="font-size:15px;font-weight:700;color:var(--text1);margin-bottom:8px">저장 이력 전체 삭제</div>'
+        + '<div style="font-size:13px;color:var(--text2);margin-bottom:20px">저장 이력을 모두 삭제할까요?</div>'
+        + '<div style="display:flex;gap:10px">'
+        + '<button id="_cfmCancelBtn" style="flex:1;padding:10px;border-radius:10px;border:none;background:rgba(255,255,255,.1);color:var(--text2);font-size:14px;font-weight:700;cursor:pointer">취소</button>'
+        + '<button id="_cfmDelAllBtn" style="flex:1;padding:10px;border-radius:10px;border:none;background:rgba(248,113,113,.3);color:#f87171;font-size:14px;font-weight:700;cursor:pointer">삭제</button>'
+        + '</div></div>';
+      cfm.querySelector('#_cfmCancelBtn').onclick = function(){ cfm.remove(); };
+      cfm.querySelector('#_cfmDelAllBtn').onclick = function() {
+        state.vcfLogs = [];
+        saveState();
+        cfm.remove();
+        var c = document.getElementById('_vcfHistContainer');
+        if(c){ c.innerHTML = ''; c.previousElementSibling && c.previousElementSibling.remove(); }
+      };
+      document.body.appendChild(cfm);
     };
     const logs = Array.isArray(state.vcfLogs) ? [...state.vcfLogs].reverse() : [];
     const vcfGroups = state.savedGroups.filter(g => Array.isArray(g.contacts) && g.contacts.length > 0);
@@ -2935,7 +2968,7 @@ function showKpiDetail(type){
     const histHtml = logs.length ? logs.slice(0,10).map(l => {
       const d = new Date(l.savedAt);
       const dateStr = isNaN(d) ? l.savedAt : `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-      return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+      return `<div id="_vcfLog_${l.id}" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)">
         <div style="flex:1;min-width:0;font-size:13px;color:var(--text2)">${escapeHtml(l.groupTitle||'그룹')} · ${l.count}명</div>
         <span style="font-size:11px;color:var(--muted);margin-right:4px">${dateStr}</span>
         <button onclick="window._deleteVcfLog('${l.id}')" style="flex-shrink:0;padding:3px 9px;border-radius:7px;border:none;background:rgba(248,113,113,.15);color:#f87171;font-size:11px;font-weight:700;cursor:pointer">삭제</button>
@@ -2953,11 +2986,11 @@ function showKpiDetail(type){
         <div style="overflow-y:auto;flex:1">
           <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:6px;letter-spacing:.5px">그룹 선택 후 저장</div>
           ${groupListHtml}
-          <div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 6px">
+          ${logs.length ? `<div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 6px">
             <span style="font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.5px">저장 이력 (최근 10건)</span>
             <button onclick="window._clearAllVcfLogs()" style="padding:3px 10px;border-radius:7px;border:none;background:rgba(248,113,113,.15);color:#f87171;font-size:11px;font-weight:700;cursor:pointer">전체 삭제</button>
           </div>
-          ${histHtml}
+          <div id="_vcfHistContainer">${histHtml}</div>` : '<div id="_vcfHistContainer"></div>'}
         </div>
       </div>`;
     vcfOverlay.addEventListener('click', e => { if(e.target === vcfOverlay) vcfOverlay.remove(); });
