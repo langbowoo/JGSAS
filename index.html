@@ -2906,7 +2906,8 @@ function showKpiDetail(type){
   } else if(type === 'vcf'){
     // 연락처 저장: 그룹 목록 + 저장 버튼 + 이력을 전용 팝업으로 처리
     const logs = Array.isArray(state.vcfLogs) ? [...state.vcfLogs].reverse() : [];
-    const groupListHtml = state.savedGroups.length ? state.savedGroups.map(g => {
+    const vcfGroups = state.savedGroups.filter(g => Array.isArray(g.contacts) && g.contacts.length > 0);
+    const groupListHtml = vcfGroups.length ? vcfGroups.map(g => {
       const lastLog = logs.find(l => l.groupId === g.id);
       const lastStr = lastLog ? (() => { const d = new Date(lastLog.savedAt); return isNaN(d) ? lastLog.savedAt : `최근 ${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; })() : '저장 이력 없음';
       return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07)">
@@ -2915,6 +2916,7 @@ function showKpiDetail(type){
           <div style="font-size:12px;color:var(--text2);margin-top:2px">${g.contacts.length}명 · ${escapeHtml(lastStr)}</div>
         </div>
         <button onclick="exportGroupVcf('${g.id}')" style="flex-shrink:0;padding:6px 14px;border-radius:10px;border:none;background:rgba(52,211,153,.2);color:#34d399;font-size:12px;font-weight:700;cursor:pointer">저장</button>
+        <button onclick="document.getElementById('_vcfOverlay')?.remove();deleteGroup('${g.id}')" style="flex-shrink:0;padding:6px 14px;border-radius:10px;border:none;background:rgba(248,113,113,.15);color:#f87171;font-size:12px;font-weight:700;cursor:pointer">삭제</button>
       </div>`;
     }).join('') : '<div style="padding:16px 0;color:var(--text2);font-size:13px">저장된 그룹이 없습니다.</div>';
     const histHtml = logs.length ? logs.slice(0,10).map(l => {
@@ -2926,6 +2928,7 @@ function showKpiDetail(type){
       </div>`;
     }).join('') : '<div style="font-size:12px;color:var(--muted);padding:8px 0">이력 없음</div>';
     const vcfOverlay = document.createElement('div');
+    vcfOverlay.id = '_vcfOverlay';
     vcfOverlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
     vcfOverlay.innerHTML = `
       <div style="background:#1e1e2e;border-radius:20px 20px 0 0;padding:20px 18px 32px;width:100%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 -4px 32px rgba(0,0,0,.4)">
