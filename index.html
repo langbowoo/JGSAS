@@ -119,7 +119,9 @@ Mobile PWA HTML App
     .template-card{background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:13px;margin-bottom:9px}
     .template-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:8px}
     .template-name{font-size:15px;font-weight:800}
-    .template-preview{font-size:13px;color:var(--text2);line-height:1.6;white-space:pre-wrap;max-height:68px;overflow:hidden}
+    .template-preview{font-size:13px;color:var(--text2);line-height:1.6;white-space:pre-wrap;max-height:68px;overflow:hidden;transition:max-height .3s ease}
+    .template-preview.expanded{max-height:2000px}
+    .chip.blue.tpl-expand-btn{cursor:pointer;user-select:none}
     .kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
     .kpi{padding:11px;border-radius:14px;background:var(--surface2);border:1px solid var(--border);text-align:center}
     .kpi strong{display:block;font-size:18px;margin-top:4px}
@@ -138,7 +140,7 @@ Mobile PWA HTML App
     .member-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
     .template-tags{display:flex;gap:6px;flex-wrap:wrap}
     .tag-btn{padding:7px 10px;border-radius:999px;border:1px solid var(--border);background:var(--surface2);font-size:12px;color:var(--text2);cursor:pointer}
-    .sms-body{padding:12px;border-radius:16px;background:#2a5298;white-space:pre-wrap;line-height:1.72;font-size:14px;box-shadow:0 8px 24px rgba(42,82,152,.32)}
+    .sms-body{padding:12px;border-radius:16px;background:#2a5298;white-space:pre-wrap;line-height:1.72;font-size:14px;box-shadow:0 8px 24px rgba(42,82,152,.32);width:100%;box-sizing:border-box;border:none;outline:none;color:#fff;font-family:inherit;resize:vertical;min-height:200px}
     .empty{padding:24px 14px;text-align:center;color:var(--text2)}
     .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%) translateY(100px);background:var(--surface2);border:1px solid var(--border);color:#fff;padding:12px 16px;border-radius:14px;z-index:99;font-size:13px;transition:.28s;box-shadow:var(--shadow)}
     .toast.show{transform:translateX(-50%) translateY(0)}
@@ -209,12 +211,12 @@ Mobile PWA HTML App
     .autofill-banner{margin-top:10px;padding:10px 13px;border-radius:13px;background:rgba(79,142,247,.07);border:1px solid rgba(79,142,247,.2);font-size:12px;line-height:1.7;color:var(--text2);display:none}
     .autofill-banner.show{display:block}
     .autofill-banner strong{color:var(--accent);font-weight:800}
-    .autofill-field-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+    .autofill-field-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
     .autofill-field-chip{padding:3px 8px;border-radius:8px;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.25);color:var(--accent2);font-size:11px;font-weight:700}
     .autofill-field-chip.warn{background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.25);color:var(--warn)}
-    .diag-log{margin-top:8px;padding:10px 12px;border-radius:12px;background:var(--surface3);border:1px solid var(--border);font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;white-space:pre-wrap;max-height:120px;overflow:auto;display:none}
-    .diag-log.show{display:block}
-    .diag-toggle{cursor:pointer;font-size:11px;color:var(--muted);text-decoration:underline;background:none;border:none;padding:2px 0;margin-top:5px}
+    .auto-result-item{padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+    .auto-result-item:last-child{border-bottom:none;padding-bottom:0}
+    .auto-result-item:first-child{padding-top:8px}
   </style>
 </head>
 <body>
@@ -294,9 +296,9 @@ Mobile PWA HTML App
         <span class="subtle" id="sourceStatus">대기 중</span>
       </div>
       <div class="upload-grid">
-        <label class="upload-btn" id="excelLabel"><strong>Excel 업로드</strong><span>.xlsx .xls</span><input id="excelInput" type="file" accept=".xlsx,.xls" hidden></label>
-        <label class="upload-btn" id="pdfLabel"><strong>PDF 업로드</strong><span>.pdf</span><input id="pdfInput" type="file" accept=".pdf" hidden></label>
         <label class="upload-btn" id="wordLabel"><strong>Word 업로드</strong><span>.docx</span><input id="wordInput" type="file" accept=".docx" hidden></label>
+        <label class="upload-btn" id="pdfLabel"><strong>PDF 업로드</strong><span>.pdf</span><input id="pdfInput" type="file" accept=".pdf" hidden></label>
+        <label class="upload-btn" id="excelLabel"><strong>Excel 업로드</strong><span>.xlsx .xls</span><input id="excelInput" type="file" accept=".xlsx,.xls" hidden></label>
         <div class="upload-status-box">
           <div class="upload-status-row"><span>전체인원</span><strong id="draftCountInline">0명</strong></div>
           <div class="upload-status-row"><span>선택인원</span><strong id="selectedCountInline" style="color:var(--accent2)">0명</strong></div>
@@ -304,7 +306,7 @@ Mobile PWA HTML App
         </div>
       </div>
       <div style="margin-top:9px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <span class="small subtle" style="flex:1;min-width:0"><span style="color:#fbbf24;font-weight:800">추출리셋</span>을 클릭하고 업로드 하세요.</span>
+        <span class="small subtle" style="flex:1;min-width:0">파일 추가 업로드 가능 · 연락처 누적, 여행정보 빈 필드만 채움. 전체 초기화는 <span style="color:#fbbf24;font-weight:800">추출리셋</span></span>
         <button class="btn btn-warn" id="resetExtractBtn" style="padding:6px 14px;font-size:12px;border-radius:10px;white-space:nowrap;flex-shrink:0">추출리셋</button>
       </div>
       <!-- 분리형 직접 입력 폼 -->
@@ -325,15 +327,8 @@ Mobile PWA HTML App
       </div>
       <!-- ── 자동 인식 엔진 상태 표시 영역 (v3 추가) ── -->
       <div id="autoFillBanner" class="autofill-banner">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <strong>🤖 자동 인식 결과</strong>
-          <span id="docTypeChip" class="doc-type-chip">-</span>
-          <span id="extractStatusText" style="font-size:11px;color:var(--muted)"></span>
-        </div>
-        <div id="autofillFieldRow" class="autofill-field-row"></div>
-        <div id="autoFillMsg" style="margin-top:5px;font-size:12px;color:var(--text2)"></div>
-        <button class="diag-toggle" id="diagToggleBtn" onclick="toggleDiagLog()">▶ 진단 로그 보기</button>
-        <div id="diagLog" class="diag-log"></div>
+        <strong>🤖 자동 인식 결과</strong>
+        <div id="autoResultList"></div>
       </div>
     </div>
 
@@ -401,8 +396,9 @@ Mobile PWA HTML App
   </section>
 
   <section id="page-sms" class="page">
-    <div class="warn-box" style="margin-bottom:12px">
-      <strong>현실적인 문자 발송 UX</strong> · 브라우저에서는 <code>sms:</code> 링크로 메시지 앱을 여는 수준만 안정적입니다. 기기/메시지앱에 따라 여러 번호 일괄 전달은 제한될 수 있어, 이 앱은 <strong>복사 + 다음 사람 발송</strong> 또는 <strong>한 명씩 메시지 앱 열기</strong> 방식으로 설계했습니다.
+    <div class="warn-box" style="margin-bottom:12px;line-height:1.9">
+      <strong>한 명씩 문자 보내는 방식</strong><br>
+      폰에서 보내고 돌아와 다음 사람 보내는 방식
     </div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
@@ -420,7 +416,7 @@ Mobile PWA HTML App
 
     <div class="card">
       <select id="smsTemplateSelect" class="select" style="margin-bottom:10px"></select>
-      <div class="sms-body" id="smsPreview">템플릿을 선택하면 미리보기가 표시됩니다.</div>
+      <textarea class="sms-body" id="smsPreview" placeholder="템플릿을 선택하면 내용이 표시됩니다."></textarea>
       <div class="btn-row" style="margin-top:10px">
         <button class="btn btn-primary" id="startSendBtn">발송 시작</button>
         <button class="btn btn-ghost" id="copyMessageBtn">문자 내용 복사</button>
@@ -463,16 +459,16 @@ Mobile PWA HTML App
   </section>
 
   <section id="page-template" class="page">
-    <div class="info" style="margin-bottom:12px"><strong>보호 규칙</strong> · 기본 출발안내 원본은 수정/삭제 불가입니다. 수정이 필요하면 <strong>복사본 생성</strong> 후 편집하세요. 원본이 누락되면 자동 복구됩니다.</div>
-
     <div class="card">
-      <div class="card-title"><span>템플릿 도구</span><span class="subtle">기본 원본 + 사용자 정의</span></div>
+      <div class="card-title"><span>템플릿 도구</span></div>
       <div class="btn-row">
-        <button class="btn btn-primary" id="copyDefaultTemplateBtn">기본 출발안내 복사본 만들기</button>
         <button class="btn btn-ghost" id="newTemplateBtn">+ 새 템플릿</button>
       </div>
     </div>
 
+    <div style="text-align:center;padding:8px 12px;border-radius:10px;background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.2);font-size:12px;color:#c0ccdc;margin-bottom:8px;line-height:1.9;">
+  💡 기본 출발안내 원문 삭제 안됨<br>새 템플릿으로 나만의 문자 보내기
+</div>
     <div id="templateList"></div>
   </section>
 </div>
@@ -554,6 +550,10 @@ function pinGetCode(){
   const s = pinGetState();
   return s.userPin || PIN_DEFAULT;
 }
+async function pinHash(plain){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(plain));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
 
 function pinUpdateDots(){
   for(let i=0;i<4;i++){
@@ -589,27 +589,38 @@ function pinDelete(){
   }
 }
 
-function pinCheck(s){
-  if(pinCurrent === pinGetCode()){
-    const isDefault = !s.userPin;
+async function pinCheck(s){
+  const isDefault = !s.userPin;
+  let matched = false;
 
-    pinCurrent = '';
-    pinUpdateDots();
+  if(isDefault){
+    matched = pinCurrent === PIN_DEFAULT;
+  } else {
+    // 마이그레이션: 평문 4자리 PIN → SHA-256 해시로 자동 변환
+    let storedHash = s.userPin;
+    if(/^\d{4}$/.test(storedHash)){
+      storedHash = await pinHash(storedHash);
+      s = { ...s, userPin: storedHash };
+      pinSetState(s);
+    }
+    const inputHash = await pinHash(pinCurrent);
+    matched = inputHash === storedHash;
+  }
 
+  pinCurrent = '';
+  pinUpdateDots();
+
+  if(matched){
     if(isDefault){
-      // 기본 PIN 상태에서는 아직 앱 진입 세션을 열지 않음
       pinSetState({ ...s, failCount:0, lockedUntil:null });
-
       pinChangeStep = 2;
       pinNewCode = '';
       document.getElementById('pinError').textContent = '';
       document.getElementById('pinLockMsg').textContent = '초기 암호입니다. 새 암호를 설정해 주세요.';
       document.getElementById('pin-sub-text').textContent = '새 암호 4자리를 입력하세요';
-      // 잠금화면은 그대로 유지 (암호 변경 단계로 사용)
     } else {
-      // 일반 로그인 → 앱 진입
       const unlockedUntil = Date.now() + PIN_SESSION_HOURS * 60 * 60 * 1000;
-      pinSetState({ ...s, failCount:0, lockedUntil:null, unlockedUntil, userPin: pinGetCode() });
+      pinSetState({ ...s, failCount:0, lockedUntil:null, unlockedUntil, userPin: s.userPin });
       document.getElementById('pinLockScreen').classList.add('hide');
     }
   } else {
@@ -624,8 +635,6 @@ function pinCheck(s){
       document.getElementById('pinError').textContent = `암호가 틀렸습니다 (${failCount}/${PIN_MAX_FAIL})`;
       document.getElementById('pinLockMsg').textContent = '';
     }
-    pinCurrent = '';
-    pinUpdateDots();
   }
 }
 
@@ -641,10 +650,22 @@ function openPinChange(){
   document.getElementById('pin-sub-text').textContent = '현재 암호를 입력하세요';
 }
 
-function pinChangeHandle(){
+async function pinChangeHandle(){
   if(pinChangeStep === 1){
-    // 현재 암호 확인
-    if(pinCurrent === pinGetCode()){
+    // 현재 암호 확인 (해시 비교)
+    const s = pinGetState();
+    let storedHash = s.userPin;
+    let correct = false;
+    if(!storedHash){
+      correct = pinCurrent === PIN_DEFAULT;
+    } else {
+      if(/^\d{4}$/.test(storedHash)){
+        storedHash = await pinHash(storedHash);
+        pinSetState({ ...s, userPin: storedHash });
+      }
+      correct = (await pinHash(pinCurrent)) === storedHash;
+    }
+    if(correct){
       pinChangeStep = 2;
       pinCurrent = '';
       pinUpdateDots();
@@ -656,7 +677,6 @@ function pinChangeHandle(){
       pinUpdateDots();
     }
   } else if(pinChangeStep === 2){
-    // 새 암호 저장
     pinNewCode = pinCurrent;
     pinChangeStep = 3;
     pinCurrent = '';
@@ -664,18 +684,17 @@ function pinChangeHandle(){
     document.getElementById('pin-sub-text').textContent = '새 암호를 한 번 더 입력하세요';
     document.getElementById('pinError').textContent = '';
   } else if(pinChangeStep === 3){
-    // 새 암호 확인
     if(pinCurrent === pinNewCode){
       const s = pinGetState();
       const unlockedUntil = Date.now() + PIN_SESSION_HOURS * 60 * 60 * 1000;
-      pinSetState({ ...s, userPin: pinNewCode, failCount:0, lockedUntil:null, unlockedUntil });
+      const hashedPin = await pinHash(pinNewCode);
+      pinSetState({ ...s, userPin: hashedPin, failCount:0, lockedUntil:null, unlockedUntil });
       pinChangeStep = 0;
       pinCurrent = '';
       pinNewCode = '';
       pinUpdateDots();
       document.getElementById('pinLockScreen').classList.add('hide');
       document.getElementById('pin-sub-text').textContent = '4자리 암호를 입력하세요';
-      // 앱 토스트로 완료 안내
       setTimeout(() => showToast('암호가 변경되었습니다', 'success'), 100);
     } else {
       document.getElementById('pinError').textContent = '암호가 일치하지 않습니다. 다시 입력하세요';
@@ -796,8 +815,7 @@ function getSelectedDrafts(){ return state.extractedContactsDraft.filter(x=>x.se
 function findGroup(id){ return state.savedGroups.find(g=>g.id===id); }
 
 function ensureProtectedTemplate(){
-  const d = state.defaultTemplates?.[0];
-  if (!d || d.id !== DEFAULT_TEMPLATE.id || d.content !== DEFAULT_DEPARTURE_TEMPLATE || d.name !== '출발안내' || d.locked !== true) {
+  if (!state.defaultTemplates?.[0] || state.defaultTemplates[0].id !== DEFAULT_TEMPLATE.id) {
     state.defaultTemplates = [deepClone(DEFAULT_TEMPLATE)];
   }
 }
@@ -1751,21 +1769,12 @@ function renderAutofillChips(fieldRow, filledFields, warnings){
     fieldRow.appendChild(chip);
   });
 
-  (warnings || []).forEach(w => {
-    const chip = document.createElement('span');
-    chip.className = 'autofill-field-chip warn';
-    chip.textContent = `⚠ ${w}`;
-    fieldRow.appendChild(chip);
-  });
 }
 
-/* ── 추출 상태 UI 갱신 ───────────────────────────────── */
+/* ── 추출 상태 UI 갱신 (파일별 누적) ─────────────────── */
 function updateExtractionStatus(result){
   const banner = document.getElementById('autoFillBanner');
-  const chip = document.getElementById('docTypeChip');
-  const statusText = document.getElementById('extractStatusText');
-  const fieldRow = document.getElementById('autofillFieldRow');
-  const msg = document.getElementById('autoFillMsg');
+  const list   = document.getElementById('autoResultList');
 
   const typeMap = {
     travel_only:  { label:'✈️ 확정서 전용', cls:'travel' },
@@ -1775,51 +1784,41 @@ function updateExtractionStatus(result){
   };
 
   const typeInfo = typeMap[result.docType] || typeMap.unknown;
-  chip.textContent = typeInfo.label;
-  chip.className = `doc-type-chip ${typeInfo.cls}`;
-
-  renderAutofillChips(fieldRow, result.filledFields, result.warnings);
 
   const parts = [];
-  if(result.travelFound) parts.push('여행정보 추출 성공');
-  else parts.push('여행정보 없음');
-
+  if(result.travelFound) parts.push('여행정보 ✓');
+  else if(result.docType !== 'contacts_only') parts.push('여행정보 없음');
   if(result.contactsFound) parts.push(`명단 ${result.contactCount||0}명`);
-  else parts.push('고객명단 없음');
+  else if(result.docType !== 'travel_only') parts.push('명단 없음');
+  if(result.docType === 'unknown') parts.push('형식 인식 불가');
 
-  statusText.textContent = parts.join(' · ');
+  // 채워진 필드 칩 HTML
+  const fieldLabels = {
+    depDate:'출발일', destination:'여행지', duration:'기간', agency:'여행사',
+    flightOut:'출국편', flightIn:'귀국편', meetingTime:'미팅시간',
+    meetingPlace:'미팅장소', hotelName:'호텔명', hotelPhone:'호텔전화', extraMemo:'메모'
+  };
+  const chipsHtml = (result.filledFields||[]).map(f =>
+    `<span class="autofill-field-chip">${fieldLabels[f]||f}</span>`
+  ).join('');
 
-  if(result.docType === 'unknown'){
-    msg.textContent = '문서 형식을 인식하지 못했습니다. 원문을 확인하거나 직접 입력해 주세요.';
-  } else {
-    msg.textContent = '';
-  }
+  const fileName = escapeHtml(result.fileName || '파일');
 
+  const item = document.createElement('div');
+  item.className = 'auto-result-item';
+  item.innerHTML = `
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+      <span style="font-size:11px;color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${fileName}">${fileName}</span>
+      <span class="doc-type-chip ${typeInfo.cls}" style="font-size:11px">${typeInfo.label}</span>
+      <span style="font-size:11px;color:var(--muted)">${parts.join(' · ')}</span>
+    </div>
+    ${chipsHtml ? `<div class="autofill-field-row">${chipsHtml}</div>` : ''}`;
+
+  list.appendChild(item);
   banner.classList.add('show');
 }
 
 /* ── 진단 로그 기록 및 토글 ──────────────────────────── */
-function logExtractionDiagnostics(result){
-  const diagEl = document.getElementById('diagLog');
-  const lines = [
-    `[파일] ${result.fileName||'?'} (${result.fileType||'?'})`,
-    `[유형] ${result.docType} (여행점수:${result.travelScore} 명단점수:${result.contactScore} 번호수:${result.phoneMatches})`,
-    `[여행정보] ${result.travelFound ? '성공' : '실패'} | 채워진 필드: ${(result.filledFields||[]).join(', ')||'없음'}`,
-    `[고객명단] ${result.contactsFound ? `성공 ${result.contactCount}명` : '실패'}`,
-    result.failureLines?.length ? `[미인식 번호패턴] ${result.failureLines.slice(0,5).join(' / ')}` : '',
-    result.warnings?.length ? `[경고] ${result.warnings.join(' / ')}` : '',
-    `[처리시간] ${result.elapsed||0}ms`
-  ].filter(Boolean);
-  diagEl.textContent = lines.join('\n');
-}
-
-function toggleDiagLog(){
-  const el = document.getElementById('diagLog');
-  const btn = document.getElementById('diagToggleBtn');
-  const isOpen = el.classList.contains('show');
-  el.classList.toggle('show', !isOpen);
-  btn.textContent = isOpen ? '▶ 진단 로그 보기' : '▼ 진단 로그 닫기';
-}
 
 /* ── 텍스트 기반 Excel 파서 (여행정보 추출용 raw 텍스트 반환) ── */
 async function extractTextFromExcel(file){
@@ -2085,7 +2084,6 @@ async function handleFileUpload(file, kind){
   }finally{
     diagResult.elapsed = Date.now() - t0;
     updateExtractionStatus(diagResult);
-    logExtractionDiagnostics(diagResult);
   }
 }
 
@@ -2103,6 +2101,11 @@ function resetExtract(){
   // 자동인식결과 배너 초기화
   const banner = document.getElementById('autoFillBanner');
   if(banner) banner.classList.remove('show');
+  // 입력소스 카드 상태 초기화
+  document.getElementById('sourceStatus').textContent = '대기 중';
+  // 자동인식 누적 결과 목록 초기화
+  const resultList = document.getElementById('autoResultList');
+  if(resultList) resultList.innerHTML = '';
   showToast('여행정보 + 명단을 초기화했습니다', 'info');
 }
 
@@ -2393,16 +2396,7 @@ function renderSmsArea(){
   document.getElementById('smsTargetCount').textContent = `${group?.contacts?.length || 0}명`;
   document.getElementById('smsGroupSummary').textContent = group ? `${group.title} / ${group.travelInfo.agency || '-'} / ${group.contacts.length}명` : '저장된 그룹이 없습니다.';
   const preview = resolveTags(currentSmsTemplate().content, { group });
-  // 미리보기 강조 표시 (실제 전송 내용과 무관, 화면 표시용)
-  const highlighted = escapeHtml(preview)
-    .replace(/(\S+님)/g, '<strong style="font-size:15px">$1</strong>')
-    .replace(/(가이드 )(\S+)(입니다)/g, '$1<strong style="font-size:15px">$2</strong>$3')
-    .replace(/(가이드연락처[^\n]*|가이드 \S+ \d[\d\-]+)/g, '<strong style="font-size:15px">$1</strong>')
-    .replace(/(\d{1,2}\.\d{1,2}|\d{4}-\d{2}-\d{2})(\([가-힣]\))?/g, '<strong style="font-size:15px">$1$2</strong>')
-    .replace(/(오전|오후)\s*\d{1,2}:\d{2}/g, '<strong style="font-size:15px;letter-spacing:0.03em;color:#ffe082">$&</strong>')
-    .replace(/(터미널|층|카운터|게이트|앞|입구)[^\n]*/g, '<strong style="font-size:15px;letter-spacing:0.03em;color:#ffe082">$&</strong>')
-    .replace(/✅/g, '<span style="color:#69f0ae">✅</span>');
-  document.getElementById('smsPreview').innerHTML = highlighted;
+  document.getElementById('smsPreview').value = preview;
   document.getElementById('charInfo').textContent = `${preview.length}자 · ${preview.length <= 90 ? 'SMS' : 'MMS 가능성'}`;
 }
 
@@ -2412,7 +2406,7 @@ function loadLatestGroup(){
 }
 
 function copyCurrentMessage(){
-  const msg = document.getElementById('smsPreview').textContent;
+  const msg = document.getElementById('smsPreview').value;
   if(navigator.clipboard && window.isSecureContext){
     navigator.clipboard.writeText(msg)
       .then(()=>showToast('문자 내용을 복사했습니다','success'))
@@ -2509,7 +2503,8 @@ function openSmsForCurrent(){
   const contact = group.contacts.find(c => c.id === currentQueue.ids[currentQueue.index]); if(!contact) return;
   // BUG-06 FIX: 삭제된 템플릿 ID 참조 시 기본 템플릿으로 fallback
   const tpl = findTemplate(currentQueue.templateId) || getDefaultTemplate();
-  const msg = resolveTags(tpl.content, { group, contact });
+  const editedContent = document.getElementById('smsPreview')?.value || tpl.content;
+  const msg = resolveTags(editedContent, { group, contact });
   // BUG-01 FIX: 삼성 갤럭시 메시지 앱은 sms: body 파라미터를 무시하는 경우 있음
   // SMS 앱 열기 전 클립보드에 미리 복사하여 붙여넣기 대비
   if(navigator.clipboard && window.isSecureContext){
@@ -3160,6 +3155,12 @@ function copyDefaultTemplate(){
   renderTemplatePage();
   showToast('기본 템플릿 복사본을 만들었습니다','success');
 }
+function resetDefaultTemplate(){
+  if(!confirm('기본 출발안내를 원본으로 초기화하시겠습니까?')) return;
+  state.defaultTemplates = [deepClone(DEFAULT_TEMPLATE)];
+  saveState(); renderTemplatePage(); updateTemplateSelect(); renderSmsArea();
+  showToast('기본 출발안내를 원본으로 복구했습니다', 'info');
+}
 function openTemplateEditor(id=null){
   currentEditTemplateId = id;
   const tpl = id ? findTemplate(id) : null;
@@ -3177,9 +3178,14 @@ function saveTemplateEditor(){
   const content = document.getElementById('templateContent').value;
   if(!name || !content.trim()){ showToast('이름과 내용을 입력해주세요','error'); return; }
   if(currentEditTemplateId){
-    const tpl = state.userTemplates.find(t => t.id === currentEditTemplateId);
-    if(!tpl){ showToast('기본 원본은 편집할 수 없습니다','error'); return; }
-    tpl.name = name; tpl.type = type; tpl.content = content; tpl.updatedAt = todayIso();
+    if(currentEditTemplateId === DEFAULT_TEMPLATE.id){
+      const d = state.defaultTemplates[0];
+      d.name = name; d.type = type; d.content = content; d.updatedAt = todayIso();
+    } else {
+      const tpl = state.userTemplates.find(t => t.id === currentEditTemplateId);
+      if(!tpl){ showToast('템플릿을 찾을 수 없습니다','error'); return; }
+      tpl.name = name; tpl.type = type; tpl.content = content; tpl.updatedAt = todayIso();
+    }
   } else {
     state.userTemplates.unshift({ id:uid('tpl'), kind:'user', locked:false, type, name, content, createdAt:todayIso(), updatedAt:todayIso() });
   }
@@ -3204,24 +3210,37 @@ function renderTemplatePage(){
   list.innerHTML = all.map(t => `
     <div class="template-card">
       <div class="template-head">
-        <div>
-          <div class="template-name">${escapeHtml(t.name)}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <div class="template-name">${escapeHtml(t.name)}</div>
+            ${t.locked ? `<button class="mini-btn tpl-reset-btn" style="color:var(--warn);border-color:rgba(251,191,36,.3);background:rgba(251,191,36,.08)">원문 초기화</button>` : ''}
+          </div>
           <div class="contact-meta">
-            ${t.locked ? '<span class="chip blue">기본 원본</span>' : '<span class="chip green">사용자 템플릿</span>'}
+            ${t.locked ? `<span class="chip blue tpl-expand-btn" onclick="toggleTplPreview('${escapeHtml(t.id)}')" id="tpl-chip-${escapeHtml(t.id)}">기본 원문 ▼</span>` : '<span class="chip green">사용자 템플릿</span>'}
             <span class="chip">${escapeHtml(t.type || '사용자')}</span>
           </div>
         </div>
-        <div class="member-actions">
+        <div class="member-actions" style="flex-direction:row;gap:5px;align-items:center">
           ${t.locked
-            ? '<button class="mini-btn tpl-copy-btn">복사</button>'
+            ? `<button class="mini-btn tpl-edit-btn" data-id="${escapeHtml(t.id)}">편집</button>
+               <button class="mini-btn tpl-copy-btn">복사</button>`
             : `<button class="mini-btn tpl-edit-btn" data-id="${escapeHtml(t.id)}">편집</button>`}
         </div>
       </div>
-      <div class="template-preview">${escapeHtml(resolveTags(t.content))}</div>
+      <div class="template-preview" id="tpl-preview-${escapeHtml(t.id)}">${escapeHtml(resolveTags(t.content))}</div>
     </div>`).join('');
   // 이벤트 위임
   list.querySelectorAll('.tpl-copy-btn').forEach(btn => btn.addEventListener('click', copyDefaultTemplate));
+  list.querySelectorAll('.tpl-reset-btn').forEach(btn => btn.addEventListener('click', resetDefaultTemplate));
   list.querySelectorAll('.tpl-edit-btn').forEach(btn => btn.addEventListener('click', () => openTemplateEditor(btn.dataset.id)));
+}
+
+function toggleTplPreview(id){
+  const preview = document.getElementById('tpl-preview-' + id);
+  const chip    = document.getElementById('tpl-chip-' + id);
+  if(!preview || !chip) return;
+  const expanded = preview.classList.toggle('expanded');
+  chip.textContent = '기본 원문 ' + (expanded ? '▲' : '▼');
 }
 
 function hydrateUI(){
@@ -3279,17 +3298,6 @@ function bindEvents(){
   }
   document.getElementById('guideName').addEventListener('input', syncGuideProfile);
   document.getElementById('guidePhone').addEventListener('input', syncGuideProfile);
-  // 업로드 잠금: 명단이 있을 때 추출리셋 없이 업로드 차단
-  function _guardUpload(e){
-    if(state.extractedContactsDraft.length > 0){
-      e.preventDefault();
-      showToast('추출리셋을 먼저 클릭하세요', 'error');
-    }
-  }
-  document.getElementById('excelLabel').addEventListener('click', _guardUpload);
-  document.getElementById('pdfLabel').addEventListener('click', _guardUpload);
-  document.getElementById('wordLabel').addEventListener('click', _guardUpload);
-
   document.getElementById('excelInput').addEventListener('change', async e => {
     const input = e.target;
     const file = input.files && input.files[0];
@@ -3336,6 +3344,10 @@ function bindEvents(){
   document.getElementById('loadLatestGroupBtn').addEventListener('click', loadLatestGroup);
   document.getElementById('copyMessageBtn').addEventListener('click', copyCurrentMessage);
   document.getElementById('smsTemplateSelect').addEventListener('change', renderSmsArea);
+  document.getElementById('smsPreview').addEventListener('input', () => {
+    const v = document.getElementById('smsPreview').value;
+    document.getElementById('charInfo').textContent = `${v.length}자 · ${v.length <= 90 ? 'SMS' : 'MMS 가능성'}`;
+  });
   document.getElementById('startSendBtn').addEventListener('click', () => { if(buildQueue()){ openSmsForCurrent(); } });
   document.getElementById('sendCurrentBtn').addEventListener('click', openSmsForCurrent);
   document.getElementById('markCurrentSentBtn').addEventListener('click', ()=>advanceQueue('success'));
@@ -3398,7 +3410,6 @@ function bindEvents(){
     }
   });
   // exportGroupVcfBtn 제거됨 — KPI 연락처저장 팝업에서 처리
-  document.getElementById('copyDefaultTemplateBtn').addEventListener('click', copyDefaultTemplate);
   document.getElementById('newTemplateBtn').addEventListener('click', ()=>openTemplateEditor(null));
   document.getElementById('closeTemplateEditorBtn').addEventListener('click', closeTemplateEditor);
   document.getElementById('saveTemplateBtn').addEventListener('click', saveTemplateEditor);
