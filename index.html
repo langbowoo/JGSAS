@@ -22,6 +22,9 @@ Mobile PWA HTML App
   <meta name="theme-color" content="#1a3a6b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="JGSAS">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
   <title>JGSAS_v1.4</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
@@ -3477,6 +3480,14 @@ hydrateUI();
     applyState(hidden);
   };
 })();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('./service-worker.js').catch(function(err){
+      console.warn('serviceWorker registration failed', err);
+    });
+  });
+}
 </script>
 </body>
 </html>
