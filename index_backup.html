@@ -119,13 +119,19 @@ Mobile PWA HTML App
     .template-card{background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:13px;margin-bottom:9px}
     .template-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:8px}
     .template-name{font-size:15px;font-weight:800}
-    .template-preview{font-size:13px;color:var(--text2);line-height:1.6;white-space:pre-wrap;max-height:68px;overflow:hidden}
-    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+    .template-preview{font-size:13px;color:var(--text2);line-height:1.6;white-space:pre-wrap;max-height:68px;overflow:hidden;transition:max-height .3s ease}
+    .template-preview.expanded{max-height:2000px}
+    .chip.blue.tpl-expand-btn{cursor:pointer;user-select:none}
+    .kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
     .kpi{padding:11px;border-radius:14px;background:var(--surface2);border:1px solid var(--border);text-align:center}
     .kpi strong{display:block;font-size:18px;margin-top:4px}
     .kpi span{font-size:11px;color:var(--text2)}
     .search-row{display:flex;gap:8px;align-items:center}
     .group-card{background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:12px;margin-bottom:10px}
+    .group-card.collapsed .contact-card-grid{display:none}
+    .group-card.collapsed .warn-box{display:none}
+    .group-toggle-btn{background:none;border:none;color:var(--text2);font-size:16px;cursor:pointer;padding:0 4px;line-height:1;transition:transform .2s}
+    .group-card.collapsed .group-toggle-btn{transform:rotate(-90deg)}
     .group-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px}
     .group-title{font-size:14px;font-weight:800}
     .group-sub{font-size:12px;color:var(--text2)}
@@ -134,7 +140,7 @@ Mobile PWA HTML App
     .member-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
     .template-tags{display:flex;gap:6px;flex-wrap:wrap}
     .tag-btn{padding:7px 10px;border-radius:999px;border:1px solid var(--border);background:var(--surface2);font-size:12px;color:var(--text2);cursor:pointer}
-    .sms-body{padding:12px;border-radius:16px;background:#2a5298;white-space:pre-wrap;line-height:1.72;font-size:14px;box-shadow:0 8px 24px rgba(42,82,152,.32)}
+    .sms-body{padding:12px;border-radius:16px;background:#2a5298;white-space:pre-wrap;line-height:1.72;font-size:14px;box-shadow:0 8px 24px rgba(42,82,152,.32);width:100%;box-sizing:border-box;border:none;outline:none;color:#fff;font-family:inherit;resize:vertical;min-height:200px}
     .empty{padding:24px 14px;text-align:center;color:var(--text2)}
     .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%) translateY(100px);background:var(--surface2);border:1px solid var(--border);color:#fff;padding:12px 16px;border-radius:14px;z-index:99;font-size:13px;transition:.28s;box-shadow:var(--shadow)}
     .toast.show{transform:translateX(-50%) translateY(0)}
@@ -173,7 +179,7 @@ Mobile PWA HTML App
     .modal-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
 
     @media (max-width:680px){
-      .grid-2,.guide-box,.kpi-grid{grid-template-columns:1fr}      .tabs{top:60px}
+      .grid-2,.guide-box{grid-template-columns:1fr}      .kpi-grid{grid-template-columns:repeat(3,1fr)}      .tabs{top:60px}
       .member-row{grid-template-columns:1fr}
       .member-actions{justify-content:flex-start}
       .contact-card-grid{grid-template-columns:repeat(2,1fr)}
@@ -205,12 +211,12 @@ Mobile PWA HTML App
     .autofill-banner{margin-top:10px;padding:10px 13px;border-radius:13px;background:rgba(79,142,247,.07);border:1px solid rgba(79,142,247,.2);font-size:12px;line-height:1.7;color:var(--text2);display:none}
     .autofill-banner.show{display:block}
     .autofill-banner strong{color:var(--accent);font-weight:800}
-    .autofill-field-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+    .autofill-field-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
     .autofill-field-chip{padding:3px 8px;border-radius:8px;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.25);color:var(--accent2);font-size:11px;font-weight:700}
     .autofill-field-chip.warn{background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.25);color:var(--warn)}
-    .diag-log{margin-top:8px;padding:10px 12px;border-radius:12px;background:var(--surface3);border:1px solid var(--border);font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;white-space:pre-wrap;max-height:120px;overflow:auto;display:none}
-    .diag-log.show{display:block}
-    .diag-toggle{cursor:pointer;font-size:11px;color:var(--muted);text-decoration:underline;background:none;border:none;padding:2px 0;margin-top:5px}
+    .auto-result-item{padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+    .auto-result-item:last-child{border-bottom:none;padding-bottom:0}
+    .auto-result-item:first-child{padding-top:8px}
   </style>
 </head>
 <body>
@@ -252,7 +258,7 @@ Mobile PWA HTML App
           <h1>JGSAS</h1>
           <div class="version-badge" id="versionBadge">v1.4</div>
         </div>
-        <p>일본여행 가이드 출발안내 · 명단 추출 · 자동 인식 · 해피콜 관리</p>
+        <p style="line-height:1.6;font-size:11px">명단업로드·입력 → 문자발송<br>→ 연락처저장 → 해피콜</p>
       </div>
       <div class="header-right">
         <div class="guide-info-display" id="guideInfoDisplay">
@@ -284,24 +290,24 @@ Mobile PWA HTML App
   </nav>
 
   <section id="page-schedule" class="page active">
-    <div class="info" style="margin-bottom:12px">
-      <strong>핵심 흐름</strong> · 파일 업로드 또는 직접 입력 → 자동 추출·검수 → 그룹 저장 → 문자 탭 이동 → 발송 기록 관리
-    </div>
-
     <div class="card">
       <div class="card-title">
         <span>1) 입력 소스</span>
         <span class="subtle" id="sourceStatus">대기 중</span>
       </div>
       <div class="upload-grid">
-        <label class="upload-btn"><strong>Excel 업로드</strong><span>.xlsx .xls</span><input id="excelInput" type="file" accept=".xlsx,.xls" hidden></label>
-        <label class="upload-btn"><strong>PDF 업로드</strong><span>.pdf</span><input id="pdfInput" type="file" accept=".pdf" hidden></label>
-        <label class="upload-btn"><strong>Word 업로드</strong><span>.docx</span><input id="wordInput" type="file" accept=".docx" hidden></label>
+        <label class="upload-btn" id="wordLabel"><strong>Word 업로드</strong><span>.docx</span><input id="wordInput" type="file" accept=".docx" hidden></label>
+        <label class="upload-btn" id="pdfLabel"><strong>PDF 업로드</strong><span>.pdf</span><input id="pdfInput" type="file" accept=".pdf" hidden></label>
+        <label class="upload-btn" id="excelLabel"><strong>Excel 업로드</strong><span>.xlsx .xls</span><input id="excelInput" type="file" accept=".xlsx,.xls" hidden></label>
         <div class="upload-status-box">
-          <div class="upload-status-row"><span>전체</span><strong id="draftCountInline">0명</strong></div>
+          <div class="upload-status-row"><span>전체인원</span><strong id="draftCountInline">0명</strong></div>
           <div class="upload-status-row"><span>선택인원</span><strong id="selectedCountInline" style="color:var(--accent2)">0명</strong></div>
           <div class="upload-status-row"><span>중복</span><strong id="dupCountInline" style="color:var(--warn)">0</strong></div>
         </div>
+      </div>
+      <div style="margin-top:9px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span class="small subtle" style="flex:1;min-width:0">파일 추가 업로드 가능 · 연락처 누적, 여행정보 빈 필드만 채움. 전체 초기화는 <span style="color:#fbbf24;font-weight:800">추출리셋</span></span>
+        <button class="btn btn-warn" id="resetExtractBtn" style="padding:6px 14px;font-size:12px;border-radius:10px;white-space:nowrap;flex-shrink:0">추출리셋</button>
       </div>
       <!-- 분리형 직접 입력 폼 -->
       <div style="margin-top:14px;background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.18);border-radius:16px;padding:10px 14px">
@@ -321,17 +327,9 @@ Mobile PWA HTML App
       </div>
       <!-- ── 자동 인식 엔진 상태 표시 영역 (v3 추가) ── -->
       <div id="autoFillBanner" class="autofill-banner">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <strong>🤖 자동 인식 결과</strong>
-          <span id="docTypeChip" class="doc-type-chip">-</span>
-          <span id="extractStatusText" style="font-size:11px;color:var(--muted)"></span>
-        </div>
-        <div id="autofillFieldRow" class="autofill-field-row"></div>
-        <div id="autoFillMsg" style="margin-top:5px;font-size:12px;color:var(--text2)"></div>
-        <button class="diag-toggle" id="diagToggleBtn" onclick="toggleDiagLog()">▶ 진단 로그 보기</button>
-        <div id="diagLog" class="diag-log"></div>
+        <strong>🤖 자동 인식 결과</strong>
+        <div id="autoResultList"></div>
       </div>
-      <div class="small subtle" style="margin-top:9px">파일 업로드: Excel · PDF · Word 지원. 여행정보 + 고객명단 자동 인식 및 자동 채움 기능 포함.</div>
     </div>
 
     <div class="card">
@@ -390,11 +388,7 @@ Mobile PWA HTML App
       <div class="btn-row" style="margin-bottom:6px;flex-wrap:nowrap;gap:4px">
         <label class="chip" style="padding:5px 7px;font-size:11px;white-space:nowrap"><input type="checkbox" id="selectAllDraft" style="margin-right:4px"> 전체 선택</label>
         <label class="chip" id="deleteSelectedBtn" style="cursor:pointer;padding:5px 7px;font-size:11px;white-space:nowrap"> 선택 삭제</label>
-        <button class="btn btn-success" id="saveGroupBtn" style="padding:7px 8px;font-size:11px;border-radius:10px;white-space:nowrap">그룹 저장</button>
-      </div>
-      <div style="margin-bottom:10px;display:flex;gap:4px">
-        <button class="btn btn-warn" id="resetExtractBtn" style="flex:1;padding:7px 8px;font-size:11px;border-radius:10px">추출리셋</button>
-        <button class="btn btn-primary" id="saveAndSendBtn" style="flex:1;padding:7px 8px;font-size:11px;border-radius:10px;white-space:nowrap">저장 후 문자 보내기</button>
+        <button class="btn btn-primary" id="saveAndSendBtn" style="margin-left:auto;padding:5px 12px;font-size:11px;border-radius:10px;white-space:nowrap">문자보내기</button>
       </div>
       <div id="draftList" class="contact-list"></div>
       <div id="draftEmpty" class="empty">아직 추출된 명단이 없습니다.</div>
@@ -402,8 +396,9 @@ Mobile PWA HTML App
   </section>
 
   <section id="page-sms" class="page">
-    <div class="warn-box" style="margin-bottom:12px">
-      <strong>현실적인 문자 발송 UX</strong> · 브라우저에서는 <code>sms:</code> 링크로 메시지 앱을 여는 수준만 안정적입니다. 기기/메시지앱에 따라 여러 번호 일괄 전달은 제한될 수 있어, 이 앱은 <strong>복사 + 다음 사람 발송</strong> 또는 <strong>한 명씩 메시지 앱 열기</strong> 방식으로 설계했습니다.
+    <div class="warn-box" style="margin-bottom:12px;line-height:1.9">
+      <strong>한 명씩 문자 보내는 방식</strong><br>
+      폰에서 보내고 돌아와 다음 사람 보내는 방식
     </div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
@@ -421,12 +416,11 @@ Mobile PWA HTML App
 
     <div class="card">
       <select id="smsTemplateSelect" class="select" style="margin-bottom:10px"></select>
-      <div class="sms-body" id="smsPreview">템플릿을 선택하면 미리보기가 표시됩니다.</div>
+      <textarea class="sms-body" id="smsPreview" placeholder="템플릿을 선택하면 내용이 표시됩니다."></textarea>
       <div class="btn-row" style="margin-top:10px">
         <button class="btn btn-primary" id="startSendBtn">발송 시작</button>
-        <button class="btn btn-warn" id="markManualSentBtn">✅ 확인도장</button>
         <button class="btn btn-ghost" id="copyMessageBtn">문자 내용 복사</button>
-        <button class="btn btn-ghost" id="markCurrentSentBtn" disabled>다음문자</button>
+        <button class="btn btn-success" id="markCurrentSentBtn" disabled>다음문자</button>
       </div>
     </div>
 
@@ -443,26 +437,21 @@ Mobile PWA HTML App
 
   <section id="page-manage" class="page">
     <div class="kpi-grid" style="margin-bottom:12px">
-      <div class="kpi"><span>그룹</span><strong id="kpiGroups">0</strong></div>
-      <div class="kpi"><span>성공</span><strong id="kpiSuccess">0</strong></div>
-      <div class="kpi"><span>미발송</span><strong id="kpiPending">0</strong></div>
-      <div class="kpi"><span>해피콜 완료</span><strong id="kpiHappy">0</strong></div>
+      <div class="kpi" style="cursor:pointer" onclick="showKpiDetail('groups')"><span>그룹</span><strong id="kpiGroups">0</strong></div>
+      <div class="kpi" style="cursor:pointer" onclick="showKpiDetail('success')"><span>발송</span><strong id="kpiSuccess">0</strong></div>
+      <div class="kpi" style="cursor:pointer" onclick="showKpiDetail('pending')"><span>미발송</span><strong id="kpiPending">0</strong></div>
+      <div class="kpi" style="cursor:pointer" onclick="showKpiDetail('happy')"><span>해피콜</span><strong id="kpiHappy">0</strong></div>
+      <div class="kpi" style="cursor:pointer" onclick="showKpiDetail('vcf')"><span>연락처저장</span><strong id="kpiVcf">0</strong></div>
     </div>
     <div class="card">
-      <div class="card-title"><span>검색 / 필터</span><span class="subtle">누락 방지 운영 화면</span></div>
+      <div class="card-title"><span>검색 / 필터</span></div>
       <div class="search-row">
         <input class="input" id="manageSearch" placeholder="여행지, 출발일, 이름, 번호 검색">
         <select id="manageFilter" class="select" style="max-width:170px">
           <option value="all">전체</option>
-          <option value="unsent">미발송만</option>
-          <option value="duplicate">중복위험만</option>
-          <option value="happyPending">해피콜 미완료</option>
+          <option value="moveGroup">그룹이동</option>
+          <option value="deleteGroup">그룹삭제</option>
         </select>
-      </div>
-      <div class="btn-row" style="margin-top:10px">
-        <button class="btn btn-ghost" id="exportDataBtn">로컬 데이터 내보내기</button>
-        <label class="btn btn-ghost" for="importDataInput">가져오기</label>
-        <input hidden type="file" id="importDataInput" accept=".json">
       </div>
     </div>
     <div id="manageGroups"></div>
@@ -470,16 +459,16 @@ Mobile PWA HTML App
   </section>
 
   <section id="page-template" class="page">
-    <div class="info" style="margin-bottom:12px"><strong>보호 규칙</strong> · 기본 출발안내 원본은 수정/삭제 불가입니다. 수정이 필요하면 <strong>복사본 생성</strong> 후 편집하세요. 원본이 누락되면 자동 복구됩니다.</div>
-
     <div class="card">
-      <div class="card-title"><span>템플릿 도구</span><span class="subtle">기본 원본 + 사용자 정의</span></div>
+      <div class="card-title"><span>템플릿 도구</span></div>
       <div class="btn-row">
-        <button class="btn btn-primary" id="copyDefaultTemplateBtn">기본 출발안내 복사본 만들기</button>
         <button class="btn btn-ghost" id="newTemplateBtn">+ 새 템플릿</button>
       </div>
     </div>
 
+    <div style="text-align:center;padding:8px 12px;border-radius:10px;background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.2);font-size:12px;color:#c0ccdc;margin-bottom:8px;line-height:1.9;">
+  💡 기본 출발안내 원문 삭제 안됨<br>새 템플릿으로 나만의 문자 보내기
+</div>
     <div id="templateList"></div>
   </section>
 </div>
@@ -561,6 +550,10 @@ function pinGetCode(){
   const s = pinGetState();
   return s.userPin || PIN_DEFAULT;
 }
+async function pinHash(plain){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(plain));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
 
 function pinUpdateDots(){
   for(let i=0;i<4;i++){
@@ -596,25 +589,38 @@ function pinDelete(){
   }
 }
 
-function pinCheck(s){
-  if(pinCurrent === pinGetCode()){
-    // 성공
-    const isDefault = !s.userPin; // 사용자가 한 번도 암호를 바꾼 적 없으면 true
-    const unlockedUntil = Date.now() + PIN_SESSION_HOURS * 60 * 60 * 1000;
-    pinSetState({ ...s, failCount:0, lockedUntil:null, unlockedUntil, userPin: pinGetCode() });
-    pinCurrent = '';
-    pinUpdateDots();
+async function pinCheck(s){
+  const isDefault = !s.userPin;
+  let matched = false;
 
+  if(isDefault){
+    matched = pinCurrent === PIN_DEFAULT;
+  } else {
+    // 마이그레이션: 평문 4자리 PIN → SHA-256 해시로 자동 변환
+    let storedHash = s.userPin;
+    if(/^\d{4}$/.test(storedHash)){
+      storedHash = await pinHash(storedHash);
+      s = { ...s, userPin: storedHash };
+      pinSetState(s);
+    }
+    const inputHash = await pinHash(pinCurrent);
+    matched = inputHash === storedHash;
+  }
+
+  pinCurrent = '';
+  pinUpdateDots();
+
+  if(matched){
     if(isDefault){
-      // 기본 암호(0000) 첫 로그인 → 자동으로 새 암호 설정 화면
+      pinSetState({ ...s, failCount:0, lockedUntil:null });
       pinChangeStep = 2;
       pinNewCode = '';
       document.getElementById('pinError').textContent = '';
       document.getElementById('pinLockMsg').textContent = '초기 암호입니다. 새 암호를 설정해 주세요.';
       document.getElementById('pin-sub-text').textContent = '새 암호 4자리를 입력하세요';
-      // 잠금화면은 그대로 유지 (암호 변경 단계로 사용)
     } else {
-      // 일반 로그인 → 앱 진입
+      const unlockedUntil = Date.now() + PIN_SESSION_HOURS * 60 * 60 * 1000;
+      pinSetState({ ...s, failCount:0, lockedUntil:null, unlockedUntil, userPin: s.userPin });
       document.getElementById('pinLockScreen').classList.add('hide');
     }
   } else {
@@ -629,8 +635,6 @@ function pinCheck(s){
       document.getElementById('pinError').textContent = `암호가 틀렸습니다 (${failCount}/${PIN_MAX_FAIL})`;
       document.getElementById('pinLockMsg').textContent = '';
     }
-    pinCurrent = '';
-    pinUpdateDots();
   }
 }
 
@@ -646,10 +650,22 @@ function openPinChange(){
   document.getElementById('pin-sub-text').textContent = '현재 암호를 입력하세요';
 }
 
-function pinChangeHandle(){
+async function pinChangeHandle(){
   if(pinChangeStep === 1){
-    // 현재 암호 확인
-    if(pinCurrent === pinGetCode()){
+    // 현재 암호 확인 (해시 비교)
+    const s = pinGetState();
+    let storedHash = s.userPin;
+    let correct = false;
+    if(!storedHash){
+      correct = pinCurrent === PIN_DEFAULT;
+    } else {
+      if(/^\d{4}$/.test(storedHash)){
+        storedHash = await pinHash(storedHash);
+        pinSetState({ ...s, userPin: storedHash });
+      }
+      correct = (await pinHash(pinCurrent)) === storedHash;
+    }
+    if(correct){
       pinChangeStep = 2;
       pinCurrent = '';
       pinUpdateDots();
@@ -661,7 +677,6 @@ function pinChangeHandle(){
       pinUpdateDots();
     }
   } else if(pinChangeStep === 2){
-    // 새 암호 저장
     pinNewCode = pinCurrent;
     pinChangeStep = 3;
     pinCurrent = '';
@@ -669,18 +684,17 @@ function pinChangeHandle(){
     document.getElementById('pin-sub-text').textContent = '새 암호를 한 번 더 입력하세요';
     document.getElementById('pinError').textContent = '';
   } else if(pinChangeStep === 3){
-    // 새 암호 확인
     if(pinCurrent === pinNewCode){
       const s = pinGetState();
       const unlockedUntil = Date.now() + PIN_SESSION_HOURS * 60 * 60 * 1000;
-      pinSetState({ ...s, userPin: pinNewCode, failCount:0, lockedUntil:null, unlockedUntil });
+      const hashedPin = await pinHash(pinNewCode);
+      pinSetState({ ...s, userPin: hashedPin, failCount:0, lockedUntil:null, unlockedUntil });
       pinChangeStep = 0;
       pinCurrent = '';
       pinNewCode = '';
       pinUpdateDots();
       document.getElementById('pinLockScreen').classList.add('hide');
       document.getElementById('pin-sub-text').textContent = '4자리 암호를 입력하세요';
-      // 앱 토스트로 완료 안내
       setTimeout(() => showToast('암호가 변경되었습니다', 'success'), 100);
     } else {
       document.getElementById('pinError').textContent = '암호가 일치하지 않습니다. 다시 입력하세요';
@@ -696,6 +710,13 @@ function pinChangeHandle(){
 // 잠금 화면 초기 상태 확인
 (function initPin(){
   const s = pinGetState();
+
+  // 기본 PIN 상태이면 항상 잠금화면 유지
+  if(!s.userPin){
+    document.getElementById('pinLockScreen').classList.remove('hide');
+    return;
+  }
+
   // 24시간 세션 유효하면 바로 앱 진입
   if(s.unlockedUntil && Date.now() < s.unlockedUntil){
     document.getElementById('pinLockScreen').classList.add('hide');
@@ -726,14 +747,14 @@ function pinChangeHandle(){
 
 const APP_META = {
   appName: 'JGSAS',
-  appVersion: '1.1',
+  appVersion: '1.4',
   schemaVersion: 2,
-  lastUpdated: '2026-03-09',
+  lastUpdated: '2026-03-14',
   githubCheckUrl: '',
-  githubReleaseNote: 'v4: 날씨 입력 UI, 출발일 버그 수정, 추가메모 레이아웃 최적화, 상단 UI 통합'
+  githubReleaseNote: 'v1.4: structuredClone 호환성 보강, 기본 PIN 우회 방지, 날짜 요일 계산 보정, 파일 재업로드 개선, 탭 히스토리 중복 방지, 자동인식 UI 안전 렌더링'
 };
 
-const DEFAULT_DEPARTURE_TEMPLATE = `안녕하세요! {이름}님 😊\n{출발일}({출발일요일}) {여행지} {기간} 여행을 안내하게 된 가이드 {가이드}입니다.\n안전하고 즐거운 여행을 위해 아래 안내사항을 꼭 정독해 주세요.\n대표자분께만 안내 문자를 드리오니 일행분들과 꼭 공유해 주시기 바랍니다.\n\n📍 공항 미팅 안내\n· 일시: {출발일}({출발일요일})  {미팅시간} {미팅장소}\n· 피켓명: {여행사} 🚩\n\n✈️ 항공 정보\n· 출국: {출국편}(한국 출발)\n· 귀국: {귀국편}(현지 출발)\n· 수하물: 1인당 15kg (무료 위탁 기준)\n\n🌤️ 현지 날씨 및 준비물\n· 기온: {최저기온} ~ {최고기온}도\n· 날씨: {날씨}\n· 전압: 110V 돼지코 어댑터 필수\n· 환전: 엔화 현금 (작은 상점들은 현금만 가능)\n· 카드: 해외 결제 가능한 VISA, Master 등 비상용 카드\n· 기타: 선크림, 선글라스, 모자, 개인 상비약 💊\n· 샴푸·린스·칫솔·헤어 드라이기 등은 호텔에 비치됨\n· 온천 이용 시 별도 준비물 없음\n· 다이슨 드라이기 등 고전력 기기는 작동하지 않습니다\n\n📋 입국 서류: 가이드가 준비하여 공항 미팅 시 나눠드립니다. 별도 준비 불필요!\n\n🏨 호텔 정보\n· 호텔명: {호텔명}\n· 연락처: {호텔전화}\n\n⚠️ 중요 주의사항 (필독!)\n1. 한국에서 가져가시는 과일·육포 등 농수산물은 일본 세관 통과 불가 🚫\n2. 최근 일본 입국시 세관에서 금 제품및 고가의 반입 품목에 대한 조사가 매우 엄격히 시행 중입니다. 금목걸이·팔찌 등 고가 귀금속은 집에 두고 오시길 추천드립니다.\n3. 외부 음식: 현지 호텔 식당은 외부 식음료 반입 금지 🚫\n4. 보조배터리 및 전자담배 기내반입 절차  https://bit.ly/4llTm5G\n\n내일 해피콜로  연락드리겠습니다. 설레는 여행 준비 되세요! 🌸\n가이드 {가이드} {가이드연락처}`;
+const DEFAULT_DEPARTURE_TEMPLATE = `안녕하세요! {이름}님 😊\n{출발일}({출발일요일}) {여행지} {기간} 여행을 안내하게 된 가이드 {가이드}입니다.\n안전하고 즐거운 여행을 위해 아래 안내사항을 꼭 정독해 주세요.\n대표자분께만 안내 문자를 드리오니 일행분들과 꼭 공유해 주시기 바랍니다.\n\n📍 공항 미팅 안내\n· 일시: {출발일}({출발일요일})  {미팅시간} {미팅장소}\n· 피켓명: {여행사} ✅\n\n✈️ 항공 정보\n· 출국: {출국편}(한국 출발)\n· 귀국: {귀국편}(현지 출발)\n· 수하물: 1인당 15kg (무료 위탁 기준)\n\n🌤️ 현지 날씨 및 준비물\n· 기온: {최저기온} ~ {최고기온}도\n· 날씨: {날씨}\n· 전압: 110V 돼지코 어댑터 필수\n· 환전: 엔화 현금 (작은 상점들은 현금만 가능)\n· 카드: 해외 결제 가능한 VISA, Master 등 비상용 카드\n· 기타: 선크림, 선글라스, 모자, 개인 상비약 💊\n· 샴푸·린스·칫솔·헤어 드라이기 등은 호텔에 비치됨\n· 온천 이용 시 별도 준비물 없음\n· 다이슨 드라이기 등 고전력 기기는 작동하지 않습니다\n\n📋 입국 서류: 가이드가 준비하여 공항 미팅 시 나눠드립니다. 별도 준비 불필요!\n\n🏨 호텔 정보\n· 호텔명: {호텔명}\n· 연락처: {호텔전화}\n\n⚠️ 중요 주의사항 (필독!)\n1. 한국에서 가져가시는 과일·육포 등 농수산물은 일본 세관 통과 불가 🚫\n2. 최근 일본 입국시 세관에서 금 제품및 고가의 반입 품목에 대한 조사가 매우 엄격히 시행 중입니다. 금목걸이·팔찌 등 고가 귀금속은 집에 두고 오시길 추천드립니다.\n3. 외부 음식: 현지 호텔 식당은 외부 식음료 반입 금지 🚫\n4. 보조배터리 및 전자담배 기내반입 절차  https://bit.ly/4llTm5G\n\n내일 해피콜로  연락드리겠습니다. 설레는 여행 준비 되세요! 🌸\n가이드 {가이드} {가이드연락처}`;
 
 const DEFAULT_TEMPLATE = {
   id: 'default-departure-notice',
@@ -749,17 +770,18 @@ const DEFAULT_TEMPLATE = {
 const STORAGE_KEY = 'departureNoticeAppData_v3';
 const LEGACY_KEYS = ['tourAppData', 'guideName', 'guidePhone', 'guideGroups'];
 const TAGS = ['{이름}','{출발일}','{출발일요일}','{여행지}','{기간}','{여행사}','{출국편}','{미팅시간}','{미팅장소}','{귀국편}','{최저기온}','{최고기온}','{날씨}','{기온최저}','{기온최고}','{날씨안내}','{호텔명}','{호텔전화}','{가이드}','{가이드연락처}','{추가메모}'];
-const STOPWORDS = new Set(['보호자','고객','손님','성인','소아','유아','룸조인','기사','인솔자','호텔','TEL','PHONE','연락처','항공','미팅','예약','대표','비상','안내','담당','팀장','팀원','선생','원장','부장','과장','차장','이사','대리','주임','실장','센터','여행','투어','번호','휴대폰','핸드폰','전화','문자','출발','도착','일정']);
+const STOPWORDS = new Set(['보호자','고객','손님','성인','소아','유아','룸조인','기사','인솔자','호텔','TEL','PHONE','연락처','항공','미팅','예약','대표','비상','안내','담당','팀장','팀원','선생','원장','부장','과장','차장','이사','대리','주임','실장','센터','여행','투어','번호','휴대폰','핸드폰','전화','문자','출발','도착','일정','가이드']);
 
 let state = createInitialState();
 let currentEditDraftId = null;
 let currentEditTemplateId = null;
 let currentQueue = { groupId:null, templateId:null, ids:[], index:-1 };
+let _totalExtracted = 0; // 최초 추출된 전체인원 고정 카운트
 
 function createInitialState(){
   return {
     appMeta: {...APP_META},
-    defaultTemplates: [structuredClone(DEFAULT_TEMPLATE)],
+    defaultTemplates: [deepClone(DEFAULT_TEMPLATE)],
     userTemplates: [],
     currentTravelInfo: {
       depDate:'', destination:'', duration:'', agency:'', flightOut:'', flightIn:'',
@@ -769,10 +791,16 @@ function createInitialState(){
     extractedContactsDraft: [],
     savedGroups: [],
     sendLogs: [],
+    vcfLogs: [],
     happyCallLogs: [],
     guideProfile: { name:'', phone:'' },
     selectedGroupId: null
   };
+}
+
+function deepClone(obj){
+  if(typeof structuredClone === 'function') return structuredClone(obj);
+  return JSON.parse(JSON.stringify(obj));
 }
 
 function uid(prefix='id'){ return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`; }
@@ -787,9 +815,8 @@ function getSelectedDrafts(){ return state.extractedContactsDraft.filter(x=>x.se
 function findGroup(id){ return state.savedGroups.find(g=>g.id===id); }
 
 function ensureProtectedTemplate(){
-  const d = state.defaultTemplates?.[0];
-  if (!d || d.id !== DEFAULT_TEMPLATE.id || d.content !== DEFAULT_DEPARTURE_TEMPLATE || d.name !== '출발안내' || d.locked !== true) {
-    state.defaultTemplates = [structuredClone(DEFAULT_TEMPLATE)];
+  if (!state.defaultTemplates?.[0] || state.defaultTemplates[0].id !== DEFAULT_TEMPLATE.id) {
+    state.defaultTemplates = [deepClone(DEFAULT_TEMPLATE)];
   }
 }
 
@@ -813,12 +840,13 @@ function migrateState(parsed){
   const base = createInitialState();
   const next = {...base, ...parsed};
   next.appMeta = {...base.appMeta, ...(parsed.appMeta||{})};
-  next.defaultTemplates = Array.isArray(parsed.defaultTemplates) ? parsed.defaultTemplates : [structuredClone(DEFAULT_TEMPLATE)];
+  next.defaultTemplates = Array.isArray(parsed.defaultTemplates) ? parsed.defaultTemplates : [deepClone(DEFAULT_TEMPLATE)];
   next.userTemplates = Array.isArray(parsed.userTemplates) ? parsed.userTemplates.filter(t=>t && t.id !== DEFAULT_TEMPLATE.id) : [];
   next.currentTravelInfo = {...base.currentTravelInfo, ...(parsed.currentTravelInfo||{})};
   next.extractedContactsDraft = Array.isArray(parsed.extractedContactsDraft) ? parsed.extractedContactsDraft : [];
   next.savedGroups = Array.isArray(parsed.savedGroups) ? parsed.savedGroups : [];
   next.sendLogs = Array.isArray(parsed.sendLogs) ? parsed.sendLogs : [];
+  next.vcfLogs = Array.isArray(parsed.vcfLogs) ? parsed.vcfLogs : [];
   next.happyCallLogs = Array.isArray(parsed.happyCallLogs) ? parsed.happyCallLogs : [];
   next.guideProfile = {...base.guideProfile, ...(parsed.guideProfile||{})};
   next.selectedGroupId = parsed.selectedGroupId || null;
@@ -956,13 +984,43 @@ function updateGuideInfoDisplay(){
 }
 
 function switchTab(name, fromHistory){
+  const currentActive = document.querySelector('.tab.active')?.dataset.tab;
+  if(currentActive === name && !fromHistory) return;
+
+  // 문자 탭 직접 클릭 시 여행정보 필수 입력 검증 (뒤로가기 복원 제외)
+  if(name === 'sms' && !fromHistory){
+    normalizeTravelInfoFromForm();
+    const info = state.currentTravelInfo;
+    const required = ['depDate','destination','duration','agency','flightOut','flightIn','meetingTime','meetingPlace','hotelName','hotelPhone','weatherMin','weatherMax','weatherNotice'];
+    const missingFields = required.filter(f => !info[f]);
+    if(missingFields.length){
+      const labelMap = {
+        depDate:'출발일', destination:'여행지', duration:'기간', agency:'여행사',
+        flightOut:'출국편', flightIn:'귀국편', meetingTime:'미팅시간',
+        meetingPlace:'미팅장소', hotelName:'호텔명', hotelPhone:'호텔전화',
+        weatherMin:'최저기온', weatherMax:'최고기온', weatherNotice:'날씨안내'
+      };
+      const missingLabels = missingFields.map(f => labelMap[f] || f).join(', ');
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center';
+      overlay.innerHTML = `<div style="background:#1e1e2e;border-radius:16px;padding:28px 24px;max-width:300px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.5)">
+        <div style="color:#f87171;font-size:18px;font-weight:900;margin-bottom:10px;line-height:1.4">여행정보를<br>완성하세요</div>
+        <div style="color:#94a3b8;font-size:12px;margin-bottom:18px;line-height:1.6">미입력: ${missingLabels}</div>
+        <button style="background:#4f8ef7;color:#fff;border:none;border-radius:10px;padding:10px 32px;font-size:15px;font-weight:700;cursor:pointer" onclick="this.closest('div[style*=fixed]').remove()">확인</button>
+      </div>`;
+      document.body.appendChild(overlay);
+      return;
+    }
+  }
+
   document.querySelectorAll('.tab').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === name));
   document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
   document.getElementById(`page-${name}`).classList.add('active');
+
   if(name === 'sms') renderSmsArea();
   if(name === 'manage') renderManagePage();
   if(name === 'template') renderTemplatePage();
-  // 뒤로가기 복원 경로(fromHistory=true)가 아닐 때만 pushState
+
   if(!fromHistory) history.pushState({ tab: name }, '', '');
 }
 
@@ -970,18 +1028,29 @@ function normalizeDuration(v){ if(!v) return ''; return /^\d+$/.test(v) ? `${v}�
 function depDayOfWeek(dateStr){
   const m = String(dateStr || '').trim().match(/^(\d{1,2})[.\/-](\d{1,2})$/);
   if(!m) return '';
-  const month = Number(m[1]); const day = Number(m[2]);
+
+  const month = Number(m[1]);
+  const day = Number(m[2]);
+
   if(month < 1 || month > 12 || day < 1 || day > 31) return '';
-  // BUG-08 FIX: 월 단위 비교가 아닌 날짜 단위 비교로 연도 결정
-  // (기존: 월만 비교 → 이미 지난 날짜도 올해로 계산되어 요일 오류 발생)
+
   const now = new Date();
   let year = now.getFullYear();
-  const candidate = new Date(year, month - 1, day);
-  // 입력 날짜가 오늘보다 이전이면 내년으로 처리
-  if(candidate < new Date(now.getFullYear(), now.getMonth(), now.getDate())) year += 1;
-  const d = new Date(year, month - 1, day);
-  if(isNaN(d.getTime())) return '';
-  return ['일','월','화','수','목','금','토'][d.getDay()] || '';
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  let candidate = new Date(year, month - 1, day);
+
+  // 자동 보정된 잘못된 날짜 차단
+  if(candidate.getMonth() !== month - 1 || candidate.getDate() !== day) return '';
+
+  if(candidate < today){
+    year += 1;
+    candidate = new Date(year, month - 1, day);
+
+    if(candidate.getMonth() !== month - 1 || candidate.getDate() !== day) return '';
+  }
+
+  return ['일','월','화','수','목','금','토'][candidate.getDay()] || '';
 }
 function buildGroupPreview(){
   normalizeTravelInfoFromForm();
@@ -1432,17 +1501,46 @@ function extractTravelInfo(rawText){
     }
     // 미팅시간 추출
     if(!result.meetingTime){
-      const m = line.match(/(?:미팅|집합|모임)[^\d]*(\d{1,2}:\d{2}|\d{1,2}시\s*\d{0,2}분?)/);
-      if(m) result.meetingTime = m[1];
+      const m = line.match(/(?:미팅|집합|모임|집결|가이드\s*미팅)[^\d]*(\d{1,2}:\d{2}|\d{1,2}시\s*\d{0,2}분?)/);
+      if(m){
+        const raw = m[1];
+        if(/^\d{1,2}:\d{2}$/.test(raw)){
+          const h = parseInt(raw.split(':')[0], 10);
+          const mm = raw.split(':')[1];
+          const ampm = h < 12 ? '오전' : '오후';
+          const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+          result.meetingTime = `${ampm} ${String(h12).padStart(2,'0')}:${mm}`;
+        } else {
+          result.meetingTime = raw;
+        }
+      }
     }
+    // 방안A: 집결 키워드 뒤 날짜(M/D)가 끼어있어도 시간 추출 (.*?로 날짜 건너뜀)
     if(!result.meetingTime){
-      const m = line.match(/(?:오전|오후)\s*(\d{1,2}[시:]\d{0,2})/);
-      if(m) result.meetingTime = line.match(/(오전|오후)/)[0] + ' ' + m[1];
+      const m = line.match(/(?:미팅|집합|모임|집결|가이드\s*미팅).*?(\d{1,2}:\d{2})(?!\d)/);
+      if(m){
+        const raw = m[1];
+        const h = parseInt(raw.split(':')[0], 10);
+        const mm = raw.split(':')[1];
+        const ampm = h < 12 ? '오전' : '오후';
+        const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+        result.meetingTime = `${ampm} ${String(h12).padStart(2,'0')}:${mm}`;
+      }
+    }
+    // 방안A: 미팅장소 — 집결 키워드 + 날짜 포함 셀에서 공항명 이후 텍스트 추출
+    if(!result.meetingPlace){
+      const airportNames = '인천국제공항|인천 국제공항|인천공항|김포공항|김해국제공항|김해 국제공항|김해공항|제주국제공항|제주 국제공항|제주공항|청주공항|대구공항|광주공항|무안공항';
+      const m = line.match(new RegExp('(?:미팅|집합|모임|집결|가이드\\s*미팅).*?((?:' + airportNames + ')[가-힣A-Za-z0-9\\s\\-·/()]+)'));
+      if(m) result.meetingPlace = m[1].trim().slice(0,60);
     }
     // 미팅장소 추출
     if(!result.meetingPlace){
-      const m = line.match(/(?:미팅장소|집합장소|집합위치|만남위치)[:\s　]+([가-힣A-Za-z0-9\s\-·]+)/);
+      const m = line.match(/(?:미팅장소|집합장소|집합위치|만남위치|집결장소|가이드\s*미팅)[:\s　]+([가-힣A-Za-z0-9\s\-·]+)/);
       if(m) result.meetingPlace = m[1].trim().slice(0,60);
+    }
+    if(!result.meetingPlace){
+      const airportPat = /(?:인천국제공항|인천 국제공항|인천공항|김포공항|김해국제공항|김해 국제공항|김해공항|제주국제공항|제주 국제공항|제주공항|청주공항|대구공항|광주공항|무안공항)/;
+      if(airportPat.test(line) && line.length < 80) result.meetingPlace = line.trim().slice(0,60);
     }
     if(!result.meetingPlace){
       const m = line.match(/(?:터미널|카운터|게이트|청사)\s*([A-Z]?\d*[A-Z]?)/i);
@@ -1646,91 +1744,100 @@ function normalizeContacts(rawContacts){
   }));
 }
 
-/* ── 추출 상태 UI 갱신 ───────────────────────────────── */
+/* ── 자동 인식 결과 칩 렌더링 ──────────────────────────── */
+function renderAutofillChips(fieldRow, filledFields, warnings){
+  fieldRow.innerHTML = '';
+
+  const fieldLabels = {
+    depDate:'출발일',
+    destination:'여행지',
+    duration:'기간',
+    agency:'여행사',
+    flightOut:'출국편',
+    flightIn:'귀국편',
+    meetingTime:'미팅시간',
+    meetingPlace:'미팅장소',
+    hotelName:'호텔명',
+    hotelPhone:'호텔전화',
+    extraMemo:'메모'
+  };
+
+  (filledFields || []).forEach(f => {
+    const chip = document.createElement('span');
+    chip.className = 'autofill-field-chip';
+    chip.textContent = fieldLabels[f] || f;
+    fieldRow.appendChild(chip);
+  });
+
+}
+
+/* ── 추출 상태 UI 갱신 (파일별 누적) ─────────────────── */
 function updateExtractionStatus(result){
   const banner = document.getElementById('autoFillBanner');
-  const chip = document.getElementById('docTypeChip');
-  const statusText = document.getElementById('extractStatusText');
-  const fieldRow = document.getElementById('autofillFieldRow');
-  const msg = document.getElementById('autoFillMsg');
+  const list   = document.getElementById('autoResultList');
 
-  // 문서 유형 칩 표시
   const typeMap = {
-    travel_only: { label:'✈️ 확정서 전용', cls:'travel' },
+    travel_only:  { label:'✈️ 확정서 전용', cls:'travel' },
     contacts_only:{ label:'👥 고객명단 전용', cls:'contacts' },
     mixed:        { label:'📋 확정서+명단', cls:'mixed' },
     unknown:      { label:'❓ 인식 불가', cls:'unknown' }
   };
-  const typeInfo = typeMap[result.docType] || typeMap.unknown;
-  chip.textContent = typeInfo.label;
-  chip.className = `doc-type-chip ${typeInfo.cls}`;
 
-  // 채움 필드 칩
+  const typeInfo = typeMap[result.docType] || typeMap.unknown;
+
+  const parts = [];
+  if(result.travelFound) parts.push('여행정보 ✓');
+  else if(result.docType !== 'contacts_only') parts.push('여행정보 없음');
+  if(result.contactsFound) parts.push(`명단 ${result.contactCount||0}명`);
+  else if(result.docType !== 'travel_only') parts.push('명단 없음');
+  if(result.docType === 'unknown') parts.push('형식 인식 불가');
+
+  // 채워진 필드 칩 HTML
   const fieldLabels = {
     depDate:'출발일', destination:'여행지', duration:'기간', agency:'여행사',
-    flightOut:'출국편', flightIn:'귀국편', meetingTime:'미팅시간', meetingPlace:'미팅장소',
-    hotelName:'호텔명', hotelPhone:'호텔전화', extraMemo:'메모'
+    flightOut:'출국편', flightIn:'귀국편', meetingTime:'미팅시간',
+    meetingPlace:'미팅장소', hotelName:'호텔명', hotelPhone:'호텔전화', extraMemo:'메모'
   };
-  let fieldHtml = '';
-  if(result.filledFields && result.filledFields.length){
-    result.filledFields.forEach(f => {
-      fieldHtml += `<span class="autofill-field-chip">${fieldLabels[f]||f}</span>`;
-    });
-  }
-  if(result.warnings && result.warnings.length){
-    result.warnings.forEach(w => {
-      fieldHtml += `<span class="autofill-field-chip warn">⚠ ${w}</span>`;
-    });
-  }
-  fieldRow.innerHTML = fieldHtml;
+  const chipsHtml = (result.filledFields||[]).map(f =>
+    `<span class="autofill-field-chip">${fieldLabels[f]||f}</span>`
+  ).join('');
 
-  // 상태 텍스트
-  const parts = [];
-  if(result.travelFound) parts.push('여행정보 추출 성공');
-  else parts.push('여행정보 없음');
-  if(result.contactsFound) parts.push(`명단 ${result.contactCount||0}명`);
-  else parts.push('고객명단 없음');
-  statusText.textContent = parts.join(' · ');
+  const fileName = escapeHtml(result.fileName || '파일');
 
-  // 메시지
-  if(result.docType === 'unknown'){
-    msg.textContent = '문서 형식을 인식하지 못했습니다. 원문을 확인하거나 직접 입력해 주세요.';
-  } else {
-    msg.textContent = '';
-  }
+  const item = document.createElement('div');
+  item.className = 'auto-result-item';
+  item.innerHTML = `
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+      <span style="font-size:11px;color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${fileName}">${fileName}</span>
+      <span class="doc-type-chip ${typeInfo.cls}" style="font-size:11px">${typeInfo.label}</span>
+      <span style="font-size:11px;color:var(--muted)">${parts.join(' · ')}</span>
+    </div>
+    ${chipsHtml ? `<div class="autofill-field-row">${chipsHtml}</div>` : ''}`;
 
+  list.appendChild(item);
   banner.classList.add('show');
 }
 
 /* ── 진단 로그 기록 및 토글 ──────────────────────────── */
-function logExtractionDiagnostics(result){
-  const diagEl = document.getElementById('diagLog');
-  const lines = [
-    `[파일] ${result.fileName||'?'} (${result.fileType||'?'})`,
-    `[유형] ${result.docType} (여행점수:${result.travelScore} 명단점수:${result.contactScore} 번호수:${result.phoneMatches})`,
-    `[여행정보] ${result.travelFound ? '성공' : '실패'} | 채워진 필드: ${(result.filledFields||[]).join(', ')||'없음'}`,
-    `[고객명단] ${result.contactsFound ? `성공 ${result.contactCount}명` : '실패'}`,
-    result.failureLines?.length ? `[미인식 번호패턴] ${result.failureLines.slice(0,5).join(' / ')}` : '',
-    result.warnings?.length ? `[경고] ${result.warnings.join(' / ')}` : '',
-    `[처리시간] ${result.elapsed||0}ms`
-  ].filter(Boolean);
-  diagEl.textContent = lines.join('\n');
-}
-
-function toggleDiagLog(){
-  const el = document.getElementById('diagLog');
-  const btn = document.getElementById('diagToggleBtn');
-  const isOpen = el.classList.contains('show');
-  el.classList.toggle('show', !isOpen);
-  btn.textContent = isOpen ? '▶ 진단 로그 보기' : '▼ 진단 로그 닫기';
-}
 
 /* ── 텍스트 기반 Excel 파서 (여행정보 추출용 raw 텍스트 반환) ── */
 async function extractTextFromExcel(file){
   const buf = await file.arrayBuffer();
   const wb = XLSX.read(buf, { type:'array', cellText:false, cellDates:true });
   function cellStr(v){
-    const s = String(v == null ? '' : v);
+    if(v == null) return '';
+    // Date/time 객체 처리 (Excel time 타입 셀 → 한국어 오전/오후 HH:MM)
+    if(v instanceof Date){
+      const h = v.getHours(), m = v.getMinutes();
+      // 날짜 부분이 1899-12-30(Excel time only)이면 시간만 추출
+      const isTimeOnly = v.getFullYear() <= 1900;
+      if(isTimeOnly || (h > 0 || m > 0)){
+        const ampm = h < 12 ? '오전' : '오후';
+        const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+        return `${ampm} ${String(h12).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+      }
+    }
+    const s = String(v);
     if(/^[\d.]+e\+?\d+$/i.test(s)){ try{ return String(Math.round(Number(s))); }catch(e){} }
     return s;
   }
@@ -1810,6 +1917,7 @@ function mergeDraftContacts(newContacts){
     }
   });
   state.extractedContactsDraft = [...phoneMap.values(), ...noPhoneItems];
+  _totalExtracted = state.extractedContactsDraft.length; // 최초 추출 전체인원 고정
   saveState();
   renderDraftList();
 }
@@ -1976,12 +2084,11 @@ async function handleFileUpload(file, kind){
   }finally{
     diagResult.elapsed = Date.now() - t0;
     updateExtractionStatus(diagResult);
-    logExtractionDiagnostics(diagResult);
   }
 }
 
 
-function clearDrafts(){ state.extractedContactsDraft = []; saveState(); renderDraftList(); showToast('임시 명단을 비웠습니다','info'); }
+function clearDrafts(){ state.extractedContactsDraft = []; _totalExtracted = 0; saveState(); renderDraftList(); showToast('임시 명단을 비웠습니다','info'); }
 function resetExtract(){
   // 여행기본정보 초기화
   const fields = ['depDate','destination','duration','agency','flightOut','flightIn',
@@ -1990,7 +2097,15 @@ function resetExtract(){
   fields.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
   buildGroupPreview();
   // 임시명단 초기화
-  state.extractedContactsDraft = []; saveState(); renderDraftList();
+  state.extractedContactsDraft = []; _totalExtracted = 0; saveState(); renderDraftList();
+  // 자동인식결과 배너 초기화
+  const banner = document.getElementById('autoFillBanner');
+  if(banner) banner.classList.remove('show');
+  // 입력소스 카드 상태 초기화
+  document.getElementById('sourceStatus').textContent = '대기 중';
+  // 자동인식 누적 결과 목록 초기화
+  const resultList = document.getElementById('autoResultList');
+  if(resultList) resultList.innerHTML = '';
   showToast('여행정보 + 명단을 초기화했습니다', 'info');
 }
 
@@ -2061,7 +2176,7 @@ function renderDraftList(){
   const inlineDraftCount    = document.getElementById('draftCountInline');
   const inlineDupCount      = document.getElementById('dupCountInline');
   const inlineSelectedCount = document.getElementById('selectedCountInline');
-  if(inlineDraftCount)    inlineDraftCount.textContent    = `${total}명`;
+  if(inlineDraftCount)    inlineDraftCount.textContent    = `${_totalExtracted || total}명`; // 전체인원: 최초 추출 고정값
   if(inlineDupCount)      inlineDupCount.textContent      = duplicateCount;
   if(inlineSelectedCount) inlineSelectedCount.textContent = `${selectedWithPhone}명`;
   document.getElementById('selectAllDraft').checked = drafts.length > 0 && drafts.every(x => x.selected);
@@ -2154,12 +2269,8 @@ function _doSaveGroup(){
   const newGroupKey = buildGroupKey(info);
   const dupIdx = state.savedGroups.findIndex(g => g.groupKey === newGroupKey);
   if(dupIdx >= 0){
-    if(!confirm(`동일한 그룹(${state.savedGroups[dupIdx].title})이 이미 있습니다.\n덮어쓰시겠습니까?\n(취소 시 새 그룹으로 추가됩니다)`)){
-      // 취소 → 새 그룹으로 추가 (기존 그룹 유지)
-    } else {
-      // 확인 → 기존 그룹 제거 후 아래서 unshift
-      state.savedGroups.splice(dupIdx, 1);
-    }
+    // 동일 그룹키 존재 시 자동 덮어쓰기 (팝업 없이 처리)
+    state.savedGroups.splice(dupIdx, 1);
   }
   const group = {
     id: uid('group'),
@@ -2182,7 +2293,46 @@ function _doSaveGroup(){
 
 function saveGroupFromDrafts(){ _doSaveGroup(); }
 
-function saveGroupAndGoSms(){ if(_doSaveGroup()) switchTab('sms'); }
+function saveGroupAndGoSms(){
+  normalizeTravelInfoFromForm();
+  const info = state.currentTravelInfo;
+  // 필수 입력 검증 (extraMemo 제외, 13개)
+  const requiredFields = [
+    {key:'depDate',      label:'출발일'},
+    {key:'destination',  label:'여행지'},
+    {key:'duration',     label:'여행 기간'},
+    {key:'agency',       label:'여행사'},
+    {key:'flightOut',    label:'출국편'},
+    {key:'flightIn',     label:'귀국편'},
+    {key:'meetingTime',  label:'미팅 시간'},
+    {key:'meetingPlace', label:'미팅 장소'},
+    {key:'hotelName',    label:'호텔명'},
+    {key:'hotelPhone',   label:'호텔 전화'},
+    {key:'weatherMin',   label:'최저기온'},
+    {key:'weatherMax',   label:'최고기온'},
+    {key:'weatherNotice',label:'날씨 안내'},
+  ];
+  const missingFields = requiredFields.filter(f => !info[f.key]);
+  if(missingFields.length){
+    const listHtml = missingFields.map(f => `<div style="padding:4px 0;font-size:13px;color:#ffd3d3">• ${f.label}</div>`).join('');
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center';
+    overlay.innerHTML = `<div style="background:#1e1e2e;border-radius:16px;padding:28px 24px;max-width:300px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.5)">
+      <div style="color:#f87171;font-size:16px;font-weight:900;margin-bottom:14px">아래 항목을 입력해주세요</div>
+      <div style="text-align:left;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:10px;padding:10px 14px;margin-bottom:18px">${listHtml}</div>
+      <button style="background:#4f8ef7;color:#fff;border:none;border-radius:10px;padding:10px 32px;font-size:15px;font-weight:700;cursor:pointer" onclick="this.closest('div[style*=fixed]').remove()">확인</button>
+    </div>`;
+    document.body.appendChild(overlay);
+    return;
+  }
+  if(_doSaveGroup()) switchTab('sms');
+}
+
+function saveGroupAndGoKakao(){
+  if(!_doSaveGroup()) return;
+  switchTab('sms');
+  if(buildQueue()){ openKakaoForCurrent(); }
+}
 
 function resolveTags(raw, context={}){
   const group = context.group || findGroup(state.selectedGroupId) || state.savedGroups[0] || null;
@@ -2246,7 +2396,7 @@ function renderSmsArea(){
   document.getElementById('smsTargetCount').textContent = `${group?.contacts?.length || 0}명`;
   document.getElementById('smsGroupSummary').textContent = group ? `${group.title} / ${group.travelInfo.agency || '-'} / ${group.contacts.length}명` : '저장된 그룹이 없습니다.';
   const preview = resolveTags(currentSmsTemplate().content, { group });
-  document.getElementById('smsPreview').textContent = preview;
+  document.getElementById('smsPreview').value = preview;
   document.getElementById('charInfo').textContent = `${preview.length}자 · ${preview.length <= 90 ? 'SMS' : 'MMS 가능성'}`;
 }
 
@@ -2256,7 +2406,7 @@ function loadLatestGroup(){
 }
 
 function copyCurrentMessage(){
-  const msg = document.getElementById('smsPreview').textContent;
+  const msg = document.getElementById('smsPreview').value;
   if(navigator.clipboard && window.isSecureContext){
     navigator.clipboard.writeText(msg)
       .then(()=>showToast('문자 내용을 복사했습니다','success'))
@@ -2353,7 +2503,8 @@ function openSmsForCurrent(){
   const contact = group.contacts.find(c => c.id === currentQueue.ids[currentQueue.index]); if(!contact) return;
   // BUG-06 FIX: 삭제된 템플릿 ID 참조 시 기본 템플릿으로 fallback
   const tpl = findTemplate(currentQueue.templateId) || getDefaultTemplate();
-  const msg = resolveTags(tpl.content, { group, contact });
+  const editedContent = document.getElementById('smsPreview')?.value || tpl.content;
+  const msg = resolveTags(editedContent, { group, contact });
   // BUG-01 FIX: 삼성 갤럭시 메시지 앱은 sms: body 파라미터를 무시하는 경우 있음
   // SMS 앱 열기 전 클립보드에 미리 복사하여 붙여넣기 대비
   if(navigator.clipboard && window.isSecureContext){
@@ -2364,6 +2515,104 @@ function openSmsForCurrent(){
   a.style.display = 'none';
   document.body.appendChild(a); a.click(); setTimeout(()=>a.remove(), 200);
   showToast('📱 SMS 앱 열림 · 내용이 없으면 붙여넣기 하세요', 'info');
+  // AUTO-COMPLETE: SMS 앱에서 3초 이상 이탈 후 복귀 시에만 자동완료 처리
+  // (알림바·화면꺼짐 등 단순 이탈 오작동 방지)
+  let _smsAutoHandler = null;
+  let _smsLeaveTime = 0;
+  const _smsLeaveHandler = function(){
+    if(document.visibilityState === 'hidden') _smsLeaveTime = Date.now();
+  };
+  _smsAutoHandler = function(){
+    if(document.visibilityState === 'visible'){
+      document.removeEventListener('visibilitychange', _smsAutoHandler);
+      document.removeEventListener('visibilitychange', _smsLeaveHandler);
+      const elapsed = Date.now() - _smsLeaveTime;
+      if(elapsed >= 3000 && currentQueue.groupId && currentQueue.index >= 0 && currentQueue.index < currentQueue.ids.length){
+        setTimeout(()=>{ advanceQueue('success'); }, 300);
+      }
+    }
+  };
+  document.addEventListener('visibilitychange', _smsLeaveHandler);
+  document.addEventListener('visibilitychange', _smsAutoHandler);
+}
+
+function openKakaoForCurrent(){
+  const group = findGroup(currentQueue.groupId); if(!group) return;
+  const contact = group.contacts.find(c => c.id === currentQueue.ids[currentQueue.index]); if(!contact) return;
+  const tpl = findTemplate(currentQueue.templateId) || getDefaultTemplate();
+  const msg = resolveTags(tpl.content, { group, contact });
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(msg).catch(()=>{});
+  }
+  const phone = contact.phone.replace(/-/g,'');
+  const a = document.createElement('a');
+  a.href = `intent://talk/chat?phone=${phone}#Intent;package=com.kakao.talk;scheme=kakaotalk;end`;
+  a.style.display = 'none';
+  document.body.appendChild(a); a.click(); setTimeout(()=>a.remove(), 200);
+  showToast('💬 카카오톡 열림 · 내용을 붙여넣기 하세요', 'info');
+}
+
+function exportGroupVcf(groupId){
+  const group = findGroup(groupId || state.selectedGroupId) || state.savedGroups[0];
+  if(!group){ showToast('저장된 그룹이 없습니다','error'); return; }
+  const info = group.travelInfo || {};
+  const rawDate = info.depDate || '';
+  const dateMatch = rawDate.match(/(\d{1,2})[.\-\/](\d{1,2})/);
+  const fmtDate = dateMatch ? `${dateMatch[1]}.${dateMatch[2]}` : (rawDate || '');
+  const rawDur = info.duration || '';
+  const durMatch = rawDur.match(/(\d+)일/) || rawDur.match(/(\d+)$/);
+  const fmtDur = durMatch ? `${durMatch[1]}일` : (rawDur || '');
+  const vcards = group.contacts.map(contact => {
+    const phone = contact.phone.replace(/-/g,'');
+    const fn = `${contact.name}${fmtDate}${info.destination || ''}${fmtDur}/${info.agency || ''}`;
+    return `BEGIN:VCARD\nVERSION:3.0\nFN:${fn}\nTEL;TYPE=CELL:${phone}\nEND:VCARD`;
+  }).join('\n');
+  const blob = new Blob([vcards], {type:'text/vcard'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${group.title || '연락처그룹'}.vcf`;
+  a.style.display = 'none';
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 300);
+  showToast(`${group.contacts.length}명 연락처 그룹 저장 중...`, 'success');
+  // VCF 저장 로그 기록 → 관리탭에서 확인 가능
+  if(!Array.isArray(state.vcfLogs)) state.vcfLogs = [];
+  state.vcfLogs.push({
+    id: uid('vcf'),
+    groupId: group.id,
+    groupTitle: group.title || '그룹',
+    count: group.contacts.length,
+    savedAt: todayIso()
+  });
+  if(state.vcfLogs.length > 50) state.vcfLogs = state.vcfLogs.slice(-50);
+  saveState();
+  renderManagePage();
+}
+
+function saveContactToPhone(contactId, groupId){
+  const group = findGroup(groupId);
+  const contact = group?.contacts.find(c => c.id === contactId);
+  if(!contact){ showToast('연락처를 찾을 수 없습니다','error'); return; }
+  const phone = contact.phone.replace(/-/g,'');
+  const a = document.createElement('a');
+  a.href = `intent://contacts/add?phone=${phone}&name=${encodeURIComponent(contact.name)}#Intent;scheme=content;package=com.android.contacts;end`;
+  a.style.display = 'none';
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>a.remove(), 200);
+  showToast(`${contact.name} 연락처 앱 열림`, 'success');
+}
+
+function openKakaoForContact(groupId, contactId){
+  const group = findGroup(groupId);
+  const contact = group?.contacts.find(c => c.id === contactId);
+  if(!contact) return;
+  const cleanPhone = contact.phone.replace(/-/g,'');
+  const a = document.createElement('a');
+  a.href = `intent://talk/chat?phone=${cleanPhone}#Intent;package=com.kakao.talk;scheme=kakaotalk;end`;
+  a.style.display = 'none';
+  document.body.appendChild(a); a.click(); setTimeout(()=>a.remove(), 200);
+  showToast('💬 카카오톡 열림', 'info');
 }
 
 function logSendStatus(status){
@@ -2431,13 +2680,362 @@ function setHappyCall(groupId, contactId, done){
   saveState(); renderManagePage();
 }
 function deleteGroup(groupId){
-  state.savedGroups = state.savedGroups.filter(g => g.id !== groupId);
-  state.sendLogs = state.sendLogs.filter(l => l.groupId !== groupId);
-  state.happyCallLogs = state.happyCallLogs.filter(l => l.groupId !== groupId);
-  if(state.selectedGroupId === groupId) state.selectedGroupId = state.savedGroups[0]?.id || null;
-  saveState(); renderManagePage(); renderSmsArea(); showToast('그룹을 삭제했습니다','info');
+  const g = findGroup(groupId);
+  if(!g) return;
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
+  overlay.innerHTML = `
+    <div style="background:#1e1e2e;border-radius:16px;padding:24px 20px;max-width:290px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.5)">
+      <div style="font-size:15px;font-weight:800;color:var(--text1);margin-bottom:8px">"${escapeHtml(g.title)}"</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.5">그룹을 삭제하시겠습니까?<br>발송·해피콜 기록도 함께 삭제됩니다.</div>
+      <div style="display:flex;gap:8px">
+        <button id="_dgCancel" style="flex:1;padding:11px;border-radius:10px;border:none;background:var(--surface3);color:var(--text2);font-size:14px;font-weight:700;cursor:pointer">취소</button>
+        <button id="_dgConfirm" style="flex:1;padding:11px;border-radius:10px;border:none;background:#f87171;color:#fff;font-size:14px;font-weight:700;cursor:pointer">삭제</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#_dgCancel').addEventListener('click', ()=> overlay.remove());
+  overlay.querySelector('#_dgConfirm').addEventListener('click', ()=>{
+    state.savedGroups = state.savedGroups.filter(x => x.id !== groupId);
+    state.sendLogs = state.sendLogs.filter(l => l.groupId !== groupId);
+    state.happyCallLogs = state.happyCallLogs.filter(l => l.groupId !== groupId);
+    if(state.selectedGroupId === groupId) state.selectedGroupId = state.savedGroups[0]?.id || null;
+    saveState(); renderManagePage(); renderSmsArea();
+    overlay.remove();
+    showToast('그룹을 삭제했습니다', 'info');
+  });
 }
 function selectGroup(groupId){ state.selectedGroupId = groupId; saveState(); renderManagePage(); renderSmsArea(); showToast('문자 탭 대상 그룹을 변경했습니다','success'); }
+
+function selectDeleteContacts(groupId){
+  const group = findGroup(groupId);
+  if(!group) return;
+  const overlay = document.createElement('div');
+  overlay.id = 'selectDeleteOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
+  const checkedIds = new Set();
+  const rows = group.contacts.map(c => `
+    <label style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08);cursor:pointer">
+      <input type="checkbox" data-id="${escapeHtml(c.id)}" style="width:18px;height:18px;accent-color:#4f8ef7">
+      <span style="flex:1;font-size:14px;color:var(--text1)">${escapeHtml(c.name)}</span>
+      <span style="font-size:12px;color:var(--text2);font-family:monospace">${escapeHtml(c.phone)}</span>
+    </label>`).join('');
+  overlay.innerHTML = `
+    <div style="background:#1e1e2e;border-radius:20px 20px 0 0;padding:20px 18px 32px;width:100%;max-height:70vh;overflow-y:auto;box-shadow:0 -4px 32px rgba(0,0,0,.4)">
+      <div style="font-size:15px;font-weight:800;color:var(--text1);margin-bottom:14px">삭제할 연락처 선택 — ${escapeHtml(group.title)}</div>
+      <div id="sdContactList">${rows}</div>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <button onclick="document.getElementById('selectDeleteOverlay').remove()" style="flex:1;padding:12px;border-radius:10px;border:none;background:var(--surface3);color:var(--text2);font-size:14px;font-weight:700;cursor:pointer">취소</button>
+        <button id="sdConfirmBtn" style="flex:1;padding:12px;border-radius:10px;border:none;background:#f87171;color:#fff;font-size:14px;font-weight:700;cursor:pointer">선택 삭제</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById('sdConfirmBtn').addEventListener('click', function(){
+    const checked = overlay.querySelectorAll('input[type=checkbox]:checked');
+    const ids = Array.from(checked).map(el => el.dataset.id);
+    if(!ids.length){ showToast('삭제할 연락처를 선택하세요','error'); return; }
+    const g = findGroup(groupId);
+    if(!g) return;
+    g.contacts = g.contacts.filter(c => !ids.includes(c.id));
+    saveState(); renderManagePage(); renderSmsArea();
+    overlay.remove();
+    showToast(`${ids.length}명을 삭제했습니다`, 'info');
+  });
+}
+
+/* ── 그룹카드 접기/펼치기 토글 ── */
+function toggleGroupCard(groupId){
+  const card = document.getElementById(`gcard-${groupId}`);
+  if(card) card.classList.toggle('collapsed');
+}
+
+/* ── 인라인 선택삭제 모드 ── */
+function enterSelDeleteMode(groupId){
+  const group = findGroup(groupId);
+  if(!group) return;
+  const card = document.getElementById(`gcard-${groupId}`);
+  if(!card) return;
+
+  // 이미 선택삭제 모드면 무시
+  if(card.querySelector('.sel-delete-bar')) return;
+
+  // 카드 펼치기
+  card.classList.remove('collapsed');
+
+  // contact-card-grid 내 각 카드에 체크박스 추가
+  const grid = card.querySelector('.contact-card-grid');
+  if(!grid) return;
+  const contactCards = grid.querySelectorAll('.contact-card');
+  contactCards.forEach((el, i) => {
+    const contactId = group.contacts[i]?.id;
+    if(!contactId) return;
+    // onclick 임시 해제 (상세모달 방지)
+    el.dataset.origOnclick = el.getAttribute('onclick') || '';
+    el.removeAttribute('onclick');
+    el.style.position = 'relative';
+    // 체크박스 삽입
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.dataset.cid = contactId;
+    cb.style.cssText = 'position:absolute;top:8px;right:8px;width:18px;height:18px;accent-color:#f87171;cursor:pointer;z-index:2';
+    cb.addEventListener('click', e => e.stopPropagation());
+    el.appendChild(cb);
+    el.style.cursor = 'default';
+  });
+
+  // 하단 확인/취소 바 추가
+  const bar = document.createElement('div');
+  bar.className = 'sel-delete-bar';
+  bar.style.cssText = 'display:flex;gap:8px;margin-top:12px';
+  bar.innerHTML = `
+    <button style="flex:1;padding:10px;border-radius:10px;border:none;background:var(--surface3);color:var(--text2);font-size:13px;font-weight:700;cursor:pointer" id="selCancelBtn-${groupId}">취소</button>
+    <button style="flex:1;padding:10px;border-radius:10px;border:none;background:#f87171;color:#fff;font-size:13px;font-weight:700;cursor:pointer" id="selConfirmBtn-${groupId}">선택 삭제</button>`;
+  card.appendChild(bar);
+
+  // 취소
+  document.getElementById(`selCancelBtn-${groupId}`).addEventListener('click', ()=>{
+    renderManagePage();
+  });
+
+  // 확인 삭제
+  document.getElementById(`selConfirmBtn-${groupId}`).addEventListener('click', ()=>{
+    const checked = grid.querySelectorAll('input[type=checkbox]:checked');
+    const ids = Array.from(checked).map(el => el.dataset.cid);
+    if(!ids.length){ showToast('삭제할 연락처를 선택하세요','error'); return; }
+    const g = findGroup(groupId);
+    if(!g) return;
+    g.contacts = g.contacts.filter(c => !ids.includes(c.id));
+    saveState(); renderManagePage(); renderSmsArea();
+    showToast(`${ids.length}명을 삭제했습니다`, 'info');
+  });
+}
+
+function selectDeleteContacts(groupId){ enterSelDeleteMode(groupId); }
+
+/* ── KPI 클릭 → 명단 상세 오버레이 ── */
+function _buildGroupListHtml(){
+  if(!state.savedGroups.length)
+    return '<div style="padding:20px 0;text-align:center;color:var(--text2)">저장된 그룹이 없습니다</div>';
+  return state.savedGroups.map(g => `
+    <div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.07)">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:700;color:var(--text1)">${escapeHtml(g.title)}${state.selectedGroupId===g.id?' <span style="font-size:11px;color:#4f8ef7">[현재]</span>':''}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px">${escapeHtml(g.travelInfo.depDate||'-')} / ${escapeHtml(g.travelInfo.destination||'-')} · ${g.contacts.length}명</div>
+      </div>
+      <button data-delid="${escapeHtml(g.id)}" style="flex-shrink:0;padding:6px 12px;border-radius:8px;border:none;background:rgba(248,113,113,.18);color:#f87171;font-size:12px;font-weight:700;cursor:pointer">삭제</button>
+    </div>`).join('');
+}
+
+function _bindGroupListDeleteBtns(overlay){
+  overlay.querySelectorAll('button[data-delid]').forEach(btn => {
+    btn.addEventListener('click', ()=>{
+      const gid = btn.dataset.delid;
+      const g = state.savedGroups.find(x => x.id === gid);
+      if(!g) return;
+      const cfm = document.createElement('div');
+      cfm.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10000;display:flex;align-items:center;justify-content:center';
+      cfm.innerHTML = `
+        <div style="background:#1e1e2e;border-radius:16px;padding:24px 20px;max-width:290px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.5)">
+          <div style="font-size:15px;font-weight:800;color:var(--text1);margin-bottom:8px">"${escapeHtml(g.title)}"</div>
+          <div style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.5">그룹을 삭제하시겠습니까?<br>발송·해피콜 기록도 함께 삭제됩니다.</div>
+          <div style="display:flex;gap:8px">
+            <button id="_cfmCancel" style="flex:1;padding:11px;border-radius:10px;border:none;background:var(--surface3);color:var(--text2);font-size:14px;font-weight:700;cursor:pointer">취소</button>
+            <button id="_cfmOk" style="flex:1;padding:11px;border-radius:10px;border:none;background:#f87171;color:#fff;font-size:14px;font-weight:700;cursor:pointer">삭제</button>
+          </div>
+        </div>`;
+      document.body.appendChild(cfm);
+      cfm.querySelector('#_cfmCancel').addEventListener('click', ()=> cfm.remove());
+      cfm.querySelector('#_cfmOk').addEventListener('click', ()=>{
+        state.savedGroups = state.savedGroups.filter(x => x.id !== gid);
+        state.sendLogs = state.sendLogs.filter(l => l.groupId !== gid);
+        state.happyCallLogs = state.happyCallLogs.filter(l => l.groupId !== gid);
+        if(state.selectedGroupId === gid) state.selectedGroupId = state.savedGroups[0]?.id || null;
+        saveState(); renderManagePage(); renderSmsArea();
+        cfm.remove();
+        showToast('그룹을 삭제했습니다', 'info');
+        const inner = overlay.querySelector('#_kpiGroupList');
+        if(inner) inner.innerHTML = _buildGroupListHtml();
+        const titleEl = overlay.querySelector('#_kpiGroupTitle');
+        if(titleEl) titleEl.textContent = '전체 그룹 (' + state.savedGroups.length + ')';
+        _bindGroupListDeleteBtns(overlay);
+      });
+    });
+  });
+}
+
+function _bindGroupListEvents(overlay){
+  const closeBtn = overlay.querySelector('#_kpiGroupClose');
+  if(closeBtn) closeBtn.addEventListener('click', ()=> overlay.remove());
+  _bindGroupListDeleteBtns(overlay);
+}
+
+function showKpiDetail(type){
+  const targetId = state.selectedGroupId || state.savedGroups[0]?.id || null;
+  const group = targetId ? state.savedGroups.find(g => g.id === targetId) : null;
+
+  let title = '';
+  let rows = [];
+
+  if(type === 'groups'){
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
+    overlay.innerHTML = `
+      <div style="background:#1e1e2e;border-radius:20px 20px 0 0;padding:20px 18px 32px;width:100%;max-height:72vh;display:flex;flex-direction:column;box-shadow:0 -4px 32px rgba(0,0,0,.4)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-shrink:0">
+          <span id="_kpiGroupTitle" style="font-size:15px;font-weight:800;color:var(--text1)">전체 그룹 (${state.savedGroups.length})</span>
+          <button id="_kpiGroupClose" style="background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer;line-height:1">✕</button>
+        </div>
+        <div id="_kpiGroupList" style="overflow-y:auto;flex:1">${_buildGroupListHtml()}</div>
+      </div>`;
+    _bindGroupListEvents(overlay);
+    overlay.addEventListener('click', e => { if(e.target === overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
+    return;
+  } else if(type === 'success'){
+    if(!group){ showToast('선택된 그룹이 없습니다','error'); return; }
+    title = `발송 성공 — ${group.title}`;
+    rows = group.contacts
+      .filter(c => latestSendStatus(group.id, c.id)?.status === 'success')
+      .map(c => ({ name: c.name, sub: c.phone, badge: '발송✓' }));
+    if(!rows.length) rows = [{ name:'발송 성공 인원 없음', sub:'', badge:'' }];
+  } else if(type === 'pending'){
+    if(!group){ showToast('선택된 그룹이 없습니다','error'); return; }
+    title = `미발송 — ${group.title}`;
+    rows = group.contacts
+      .filter(c => { const s = latestSendStatus(group.id, c.id); return !s || s.status !== 'success'; })
+      .map(c => ({ name: c.name, sub: c.phone, badge: '미발송' }));
+    if(!rows.length) rows = [{ name:'미발송 인원 없음', sub:'', badge:'' }];
+  } else if(type === 'happy'){
+    if(!group){ showToast('선택된 그룹이 없습니다','error'); return; }
+    const done = group.contacts.filter(c => latestHappyCallStatus(group.id, c.id)?.done);
+    const todo = group.contacts.filter(c => !latestHappyCallStatus(group.id, c.id)?.done);
+    title = `해피콜 현황 — ${group.title}`;
+    rows = [
+      { name:`✅ 완료 ${done.length}명`, sub: done.map(c=>c.name).join(', ') || '-', badge:'' },
+      { name:`⏳ 미완료 ${todo.length}명`, sub: todo.map(c=>c.name).join(', ') || '-', badge:'' }
+    ];
+  } else if(type === 'vcf'){
+    // 연락처 저장: 그룹 목록 + 저장 버튼 + 이력을 전용 팝업으로 처리
+    window._deleteVcfLog = function(id) {
+      state.vcfLogs = state.vcfLogs.filter(function(l){ return l.id !== id; });
+      saveState();
+      var row = document.getElementById('_vcfLog_' + id);
+      if(row) row.remove();
+      if(!state.vcfLogs.length){
+        var c = document.getElementById('_vcfHistContainer');
+        if(c) c.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:8px 0">이력 없음</div>';
+      }
+    };
+    window._clearAllVcfLogs = function() {
+      var cfm = document.createElement('div');
+      cfm.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10001;display:flex;align-items:center;justify-content:center';
+      cfm.innerHTML = '<div style="background:#1e1e2e;border-radius:16px;padding:24px 20px;width:80%;max-width:300px;text-align:center">'
+        + '<div style="font-size:15px;font-weight:700;color:var(--text1);margin-bottom:8px">저장 이력 전체 삭제</div>'
+        + '<div style="font-size:13px;color:var(--text2);margin-bottom:20px">저장 이력을 모두 삭제할까요?</div>'
+        + '<div style="display:flex;gap:10px">'
+        + '<button id="_cfmCancelBtn" style="flex:1;padding:10px;border-radius:10px;border:none;background:rgba(255,255,255,.1);color:var(--text2);font-size:14px;font-weight:700;cursor:pointer">취소</button>'
+        + '<button id="_cfmDelAllBtn" style="flex:1;padding:10px;border-radius:10px;border:none;background:rgba(248,113,113,.3);color:#f87171;font-size:14px;font-weight:700;cursor:pointer">삭제</button>'
+        + '</div></div>';
+      cfm.querySelector('#_cfmCancelBtn').onclick = function(){ cfm.remove(); };
+      cfm.querySelector('#_cfmDelAllBtn').onclick = function() {
+        state.vcfLogs = [];
+        saveState();
+        cfm.remove();
+        var c = document.getElementById('_vcfHistContainer');
+        if(c){ c.innerHTML = ''; c.previousElementSibling && c.previousElementSibling.remove(); }
+      };
+      document.body.appendChild(cfm);
+    };
+    const logs = Array.isArray(state.vcfLogs) ? [...state.vcfLogs].reverse() : [];
+    const vcfGroups = state.savedGroups.filter(g => Array.isArray(g.contacts) && g.contacts.length > 0);
+    const groupListHtml = vcfGroups.length ? vcfGroups.map(g => {
+      const lastLog = logs.find(l => l.groupId === g.id);
+      const lastStr = lastLog ? (() => { const d = new Date(lastLog.savedAt); return isNaN(d) ? lastLog.savedAt : `최근 ${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; })() : '저장 이력 없음';
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07)">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:700;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(g.title||'그룹')}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px">${g.contacts.length}명 · ${escapeHtml(lastStr)}</div>
+        </div>
+        <button onclick="exportGroupVcf('${g.id}')" style="flex-shrink:0;padding:6px 14px;border-radius:10px;border:none;background:rgba(52,211,153,.2);color:#34d399;font-size:12px;font-weight:700;cursor:pointer">저장</button>
+        <button onclick="document.getElementById('_vcfOverlay')?.remove();deleteGroup('${g.id}')" style="flex-shrink:0;padding:6px 14px;border-radius:10px;border:none;background:rgba(248,113,113,.15);color:#f87171;font-size:12px;font-weight:700;cursor:pointer">삭제</button>
+      </div>`;
+    }).join('') : '<div style="padding:16px 0;color:var(--text2);font-size:13px">저장된 그룹이 없습니다.</div>';
+    const histHtml = logs.length ? logs.slice(0,10).map(l => {
+      const d = new Date(l.savedAt);
+      const dateStr = isNaN(d) ? l.savedAt : `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      return `<div id="_vcfLog_${l.id}" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+        <div style="flex:1;min-width:0;font-size:13px;color:var(--text2)">${escapeHtml(l.groupTitle||'그룹')} · ${l.count}명</div>
+        <span style="font-size:11px;color:var(--muted);margin-right:4px">${dateStr}</span>
+        <button onclick="window._deleteVcfLog('${l.id}')" style="flex-shrink:0;padding:3px 9px;border-radius:7px;border:none;background:rgba(248,113,113,.15);color:#f87171;font-size:11px;font-weight:700;cursor:pointer">삭제</button>
+      </div>`;
+    }).join('') : '<div style="font-size:12px;color:var(--muted);padding:8px 0">이력 없음</div>';
+    const vcfOverlay = document.createElement('div');
+    vcfOverlay.id = '_vcfOverlay';
+    vcfOverlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
+    vcfOverlay.innerHTML = `
+      <div style="background:#1e1e2e;border-radius:20px 20px 0 0;padding:20px 18px 32px;width:100%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 -4px 32px rgba(0,0,0,.4)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-shrink:0">
+          <span style="font-size:15px;font-weight:800;color:var(--text1)">연락처 저장</span>
+          <button onclick="this.closest('div[style*=fixed]').remove()" style="background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer;line-height:1">✕</button>
+        </div>
+        <div style="overflow-y:auto;flex:1">
+          <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:6px;letter-spacing:.5px">그룹 선택 후 저장</div>
+          ${groupListHtml}
+          ${logs.length ? `<div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 6px">
+            <span style="font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.5px">저장 이력 (최근 10건)</span>
+            <button onclick="window._clearAllVcfLogs()" style="padding:3px 10px;border-radius:7px;border:none;background:rgba(248,113,113,.15);color:#f87171;font-size:11px;font-weight:700;cursor:pointer">전체 삭제</button>
+          </div>
+          <div id="_vcfHistContainer">${histHtml}</div>` : '<div id="_vcfHistContainer"></div>'}
+        </div>
+      </div>`;
+    vcfOverlay.addEventListener('click', e => { if(e.target === vcfOverlay) vcfOverlay.remove(); });
+    document.body.appendChild(vcfOverlay);
+    return;
+  }
+
+  const listHtml = rows.map(r => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07)">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:700;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(r.name)}</div>
+        ${r.sub ? `<div style="font-size:12px;color:var(--text2);margin-top:2px;word-break:break-all">${escapeHtml(r.sub)}</div>` : ''}
+      </div>
+      ${r.badge ? `<span style="font-size:11px;padding:3px 8px;border-radius:8px;background:rgba(52,211,153,.15);color:#34d399;flex-shrink:0">${escapeHtml(r.badge)}</span>` : ''}
+    </div>`).join('');
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
+  overlay.innerHTML = `
+    <div style="background:#1e1e2e;border-radius:20px 20px 0 0;padding:20px 18px 32px;width:100%;max-height:72vh;display:flex;flex-direction:column;box-shadow:0 -4px 32px rgba(0,0,0,.4)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-shrink:0">
+        <span style="font-size:15px;font-weight:800;color:var(--text1)">${escapeHtml(title)}</span>
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer;line-height:1">✕</button>
+      </div>
+      <div style="overflow-y:auto;flex:1">${listHtml}</div>
+    </div>`;
+  overlay.addEventListener('click', e => { if(e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
+function getGroupStats(groupId){
+  const group = state.savedGroups.find(g => g.id === groupId);
+  if(!group) return {total:0, success:0, pending:0, fail:0, happyDone:0, happyTodo:0};
+  const total = group.contacts.length;
+  let success=0, pending=0, fail=0;
+  group.contacts.forEach(c=>{
+    const log = latestSendStatus(group.id, c.id);
+    if(!log) pending++;
+    else if(log.status === 'success') success++;
+    else if(log.status === 'fail') fail++;
+    else pending++;
+  });
+  let happyDone=0, happyTodo=0;
+  group.contacts.forEach(c=>{
+    const call = latestHappyCallStatus(group.id, c.id);
+    if(call?.done) happyDone++;
+    else happyTodo++;
+  });
+  return {total, success, pending, fail, happyDone, happyTodo};
+}
 
 function renderManagePage(){
   const search = document.getElementById('manageSearch').value.trim().toLowerCase();
@@ -2445,16 +3043,16 @@ function renderManagePage(){
   const wrap = document.getElementById('manageGroups');
   const empty = document.getElementById('manageEmpty');
   document.getElementById('kpiGroups').textContent = state.savedGroups.length;
-  document.getElementById('kpiSuccess').textContent = state.sendLogs.filter(x=>x.status==='success').length;
-  document.getElementById('kpiPending').textContent = state.sendLogs.filter(x=>x.status==='pending').length;
-  document.getElementById('kpiHappy').textContent = state.happyCallLogs.filter(x=>x.done).length;
+  const _kpiTargetId = state.selectedGroupId || state.savedGroups[0]?.id || null;
+  const _kpiStats = getGroupStats(_kpiTargetId);
+  document.getElementById('kpiSuccess').textContent = _kpiStats.success;
+  document.getElementById('kpiPending').textContent = _kpiStats.pending;
+  document.getElementById('kpiHappy').textContent = _kpiStats.happyDone;
+  document.getElementById('kpiVcf').textContent = Array.isArray(state.vcfLogs) ? state.vcfLogs.length : 0;
 
   const groups = state.savedGroups.filter(group => {
     const hay = `${group.title} ${group.travelInfo.agency || ''} ${group.contacts.map(c=>`${c.name} ${c.phone}`).join(' ')}`.toLowerCase();
     if(search && !hay.includes(search)) return false;
-    if(filter === 'unsent') return group.contacts.some(c => !latestSendStatus(group.id, c.id) || latestSendStatus(group.id, c.id).status !== 'success');
-    if(filter === 'duplicate') return group.contacts.some(c => isDuplicateSendRisk(group.id, c.id));
-    if(filter === 'happyPending') return group.contacts.some(c => !(latestHappyCallStatus(group.id, c.id)?.done));
     return true;
   });
 
@@ -2463,16 +3061,18 @@ function renderManagePage(){
   wrap.innerHTML = groups.map(group => {
     const duplicateRisk = duplicateRiskInGroup(group.contacts);
     const selected = state.selectedGroupId === group.id;
+    const gStats = getGroupStats(group.id);
     return `
-      <div class="group-card">
+      <div class="group-card" id="gcard-${group.id}">
         <div class="group-head">
-          <div>
+          <div style="flex:1;min-width:0">
             <div class="group-title">${escapeHtml(group.title)} ${selected ? '<span class="chip blue">현재 발송 그룹</span>' : ''}</div>
-            <div class="group-sub">${escapeHtml(group.travelInfo.depDate || '-')} / ${escapeHtml(group.travelInfo.destination || '-')} / ${escapeHtml(group.travelInfo.duration || '-')} / ${escapeHtml(group.travelInfo.agency || '-')} · ${group.contacts.length}명</div>
+            <div class="group-sub">${escapeHtml(group.travelInfo.depDate || '-')} / ${escapeHtml(group.travelInfo.destination || '-')} / ${escapeHtml(group.travelInfo.duration || '-')} / ${escapeHtml(group.travelInfo.agency || '-')} · ${group.contacts.length}명<br>문자 ${gStats.success}/${gStats.total} · 해피콜 ${gStats.happyDone}/${gStats.total}</div>
           </div>
-          <div class="member-actions">
-            <button class="mini-btn" onclick="selectGroup('${group.id}')">선택</button>
+          <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+            <button class="mini-btn" onclick="enterSelDeleteMode('${group.id}')">선택삭제</button>
             <button class="mini-btn" onclick="deleteGroup('${group.id}')">삭제</button>
+            <button class="group-toggle-btn" onclick="toggleGroupCard('${group.id}')" title="접기/펼치기">▼</button>
           </div>
         </div>
         ${duplicateRisk ? `<div class="warn-box" style="margin-bottom:8px">중복 번호 ${duplicateRisk}건이 그룹 내부에 있습니다. 발송 전 다시 확인해 주세요.</div>` : ''}
@@ -2528,8 +3128,10 @@ function openDetailModal(groupId, contactId){
   `;
 
   document.getElementById('detailModalActions').innerHTML = `
-    <a class="btn btn-ghost" href="tel:${contact.phone}" style="flex:1;text-decoration:none">📞 전화</a>
-    <button class="btn btn-success" style="flex:1" onclick="setHappyCall('${groupId}','${contactId}',true);closeDetailModal()">해피콜 완료</button>
+    <a class="btn btn-success" href="tel:${contact.phone}" style="flex:1;text-decoration:none;text-align:center">해피콜전화</a>
+    <button class="btn btn-success" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px" onclick="setHappyCall('${groupId}','${contactId}',true);closeDetailModal()">
+      <span style="display:inline-block;width:20px;height:20px;border-radius:5px;border:2px solid #fff;background:${happy?.done ? '#4ade80' : 'transparent'};line-height:16px;text-align:center;font-size:14px">${happy?.done ? '✓' : ''}</span>
+    </button>
     <button class="btn btn-ghost"   style="flex:1" onclick="setHappyCall('${groupId}','${contactId}',false);closeDetailModal()">해피콜 보류</button>
   `;
 
@@ -2539,8 +3141,25 @@ function closeDetailModal(){ document.getElementById('contactDetailModal').class
 function handleDetailModalBg(e){ if(e.target.id === 'contactDetailModal') closeDetailModal(); }
 
 function copyDefaultTemplate(){
-  const copy = {...structuredClone(DEFAULT_TEMPLATE), id:uid('tpl'), kind:'user', locked:false, name:`출발안내 복사본 ${state.userTemplates.filter(t=>t.name.startsWith('출발안내 복사본')).length + 1}`, updatedAt:todayIso(), createdAt:todayIso()};
-  state.userTemplates.unshift(copy); saveState(); renderTemplatePage(); showToast('기본 템플릿 복사본을 만들었습니다','success');
+  const copy = {
+    ...deepClone(DEFAULT_TEMPLATE),
+    id: uid('tpl'),
+    kind: 'user',
+    locked: false,
+    name: `출발안내 복사본 ${state.userTemplates.filter(t => t.name.startsWith('출발안내 복사본')).length + 1}`,
+    updatedAt: todayIso(),
+    createdAt: todayIso()
+  };
+  state.userTemplates.unshift(copy);
+  saveState();
+  renderTemplatePage();
+  showToast('기본 템플릿 복사본을 만들었습니다','success');
+}
+function resetDefaultTemplate(){
+  if(!confirm('기본 출발안내를 원본으로 초기화하시겠습니까?')) return;
+  state.defaultTemplates = [deepClone(DEFAULT_TEMPLATE)];
+  saveState(); renderTemplatePage(); updateTemplateSelect(); renderSmsArea();
+  showToast('기본 출발안내를 원본으로 복구했습니다', 'info');
 }
 function openTemplateEditor(id=null){
   currentEditTemplateId = id;
@@ -2559,9 +3178,14 @@ function saveTemplateEditor(){
   const content = document.getElementById('templateContent').value;
   if(!name || !content.trim()){ showToast('이름과 내용을 입력해주세요','error'); return; }
   if(currentEditTemplateId){
-    const tpl = state.userTemplates.find(t => t.id === currentEditTemplateId);
-    if(!tpl){ showToast('기본 원본은 편집할 수 없습니다','error'); return; }
-    tpl.name = name; tpl.type = type; tpl.content = content; tpl.updatedAt = todayIso();
+    if(currentEditTemplateId === DEFAULT_TEMPLATE.id){
+      const d = state.defaultTemplates[0];
+      d.name = name; d.type = type; d.content = content; d.updatedAt = todayIso();
+    } else {
+      const tpl = state.userTemplates.find(t => t.id === currentEditTemplateId);
+      if(!tpl){ showToast('템플릿을 찾을 수 없습니다','error'); return; }
+      tpl.name = name; tpl.type = type; tpl.content = content; tpl.updatedAt = todayIso();
+    }
   } else {
     state.userTemplates.unshift({ id:uid('tpl'), kind:'user', locked:false, type, name, content, createdAt:todayIso(), updatedAt:todayIso() });
   }
@@ -2586,48 +3210,37 @@ function renderTemplatePage(){
   list.innerHTML = all.map(t => `
     <div class="template-card">
       <div class="template-head">
-        <div>
-          <div class="template-name">${escapeHtml(t.name)}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <div class="template-name">${escapeHtml(t.name)}</div>
+            ${t.locked ? `<button class="mini-btn tpl-reset-btn" style="color:var(--warn);border-color:rgba(251,191,36,.3);background:rgba(251,191,36,.08)">원문 초기화</button>` : ''}
+          </div>
           <div class="contact-meta">
-            ${t.locked ? '<span class="chip blue">기본 원본</span>' : '<span class="chip green">사용자 템플릿</span>'}
+            ${t.locked ? `<span class="chip blue tpl-expand-btn" onclick="toggleTplPreview('${escapeHtml(t.id)}')" id="tpl-chip-${escapeHtml(t.id)}">기본 원문 ▼</span>` : '<span class="chip green">사용자 템플릿</span>'}
             <span class="chip">${escapeHtml(t.type || '사용자')}</span>
           </div>
         </div>
-        <div class="member-actions">
+        <div class="member-actions" style="flex-direction:row;gap:5px;align-items:center">
           ${t.locked
-            ? '<button class="mini-btn tpl-copy-btn">복사</button>'
+            ? `<button class="mini-btn tpl-edit-btn" data-id="${escapeHtml(t.id)}">편집</button>
+               <button class="mini-btn tpl-copy-btn">복사</button>`
             : `<button class="mini-btn tpl-edit-btn" data-id="${escapeHtml(t.id)}">편집</button>`}
         </div>
       </div>
-      <div class="template-preview">${escapeHtml(resolveTags(t.content))}</div>
+      <div class="template-preview" id="tpl-preview-${escapeHtml(t.id)}">${escapeHtml(resolveTags(t.content))}</div>
     </div>`).join('');
   // 이벤트 위임
   list.querySelectorAll('.tpl-copy-btn').forEach(btn => btn.addEventListener('click', copyDefaultTemplate));
+  list.querySelectorAll('.tpl-reset-btn').forEach(btn => btn.addEventListener('click', resetDefaultTemplate));
   list.querySelectorAll('.tpl-edit-btn').forEach(btn => btn.addEventListener('click', () => openTemplateEditor(btn.dataset.id)));
 }
 
-function exportData(){
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type:'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `departure-notice-backup-${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href), 500);
-}
-function importData(file){
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    try{
-      const parsed = JSON.parse(e.target.result);
-      state = migrateState(parsed);
-      ensureProtectedTemplate();
-      saveState();
-      hydrateUI();
-      showToast('가져오기 완료', 'success');
-    }catch(err){ showToast(`가져오기 실패: ${err.message}`, 'error'); }
-  };
-  reader.readAsText(file);
+function toggleTplPreview(id){
+  const preview = document.getElementById('tpl-preview-' + id);
+  const chip    = document.getElementById('tpl-chip-' + id);
+  if(!preview || !chip) return;
+  const expanded = preview.classList.toggle('expanded');
+  chip.textContent = '기본 원문 ' + (expanded ? '▲' : '▼');
 }
 
 function hydrateUI(){
@@ -2646,17 +3259,65 @@ function initTagButtons(){
   document.getElementById('tagButtons').innerHTML = html;
 }
 
+function formatMeetingTime(val){
+  const v = val.trim();
+  if(!v) return v;
+  // 이미 변환된 형식이면 그대로
+  if(/^(오전|오후)/.test(v)) return v;
+  if(/:/.test(v)) return v;
+  // 숫자 4자리(HHMM) 또는 3자리(HMM) 처리
+  const digits = v.replace(/\D/g, '');
+  if(digits.length === 3 || digits.length === 4){
+    const h = digits.length === 4 ? parseInt(digits.slice(0,2),10) : parseInt(digits.slice(0,1),10);
+    const m = digits.length === 4 ? digits.slice(2) : digits.slice(1);
+    if(h >= 0 && h <= 23 && parseInt(m,10) <= 59){
+      const ampm = h < 12 ? '오전' : '오후';
+      const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+      return `${ampm} ${String(h12).padStart(2,'0')}:${m}`;
+    }
+  }
+  return v;
+}
+
 function bindEvents(){
   document.querySelectorAll('.tab').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
   ['depDate','destination','duration','agency','flightOut','flightIn','meetingTime','meetingPlace','hotelName','hotelPhone','extraMemo','weatherMin','weatherMax','weatherNotice'].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.addEventListener('input', buildGroupPreview);
   });
+  // 미팅시간 입력 완료(blur) 시 자동 포맷 변환
+  const meetingTimeEl = document.getElementById('meetingTime');
+  if(meetingTimeEl){
+    meetingTimeEl.addEventListener('blur', function(){
+      const converted = formatMeetingTime(this.value);
+      if(converted !== this.value){
+        this.value = converted;
+        buildGroupPreview();
+      }
+    });
+  }
   document.getElementById('guideName').addEventListener('input', syncGuideProfile);
   document.getElementById('guidePhone').addEventListener('input', syncGuideProfile);
-  document.getElementById('excelInput').addEventListener('change', e => handleFileUpload(e.target.files[0], 'excel'));
-  document.getElementById('pdfInput').addEventListener('change', e => handleFileUpload(e.target.files[0], 'pdf'));
-  document.getElementById('wordInput').addEventListener('change', e => handleFileUpload(e.target.files[0], 'word'));
+  document.getElementById('excelInput').addEventListener('change', async e => {
+    const input = e.target;
+    const file = input.files && input.files[0];
+    if(file) await handleFileUpload(file, 'excel');
+    input.value = '';
+  });
+
+  document.getElementById('pdfInput').addEventListener('change', async e => {
+    const input = e.target;
+    const file = input.files && input.files[0];
+    if(file) await handleFileUpload(file, 'pdf');
+    input.value = '';
+  });
+
+  document.getElementById('wordInput').addEventListener('change', async e => {
+    const input = e.target;
+    const file = input.files && input.files[0];
+    if(file) await handleFileUpload(file, 'word');
+    input.value = '';
+  });
   document.getElementById('directAddBtn').addEventListener('click', handleDirectAdd);
   // 번호 칸에서 Enter → 직접 추가 실행
   document.getElementById('inputPhone').addEventListener('keydown', e => {
@@ -2675,7 +3336,6 @@ function bindEvents(){
     state.extractedContactsDraft = state.extractedContactsDraft.filter(x => !selectedIds.has(x.id));
     saveState(); renderDraftList(); showToast(`${selected.length}명을 삭제했습니다`,'info');
   });
-  document.getElementById('saveGroupBtn').addEventListener('click', saveGroupFromDrafts);
   document.getElementById('saveAndSendBtn').addEventListener('click', saveGroupAndGoSms);
   document.getElementById('selectAllDraft').addEventListener('change', e => toggleAllDraft(e.target.checked));
   document.getElementById('closeContactEditorBtn').addEventListener('click', closeContactEditor);
@@ -2684,17 +3344,72 @@ function bindEvents(){
   document.getElementById('loadLatestGroupBtn').addEventListener('click', loadLatestGroup);
   document.getElementById('copyMessageBtn').addEventListener('click', copyCurrentMessage);
   document.getElementById('smsTemplateSelect').addEventListener('change', renderSmsArea);
+  document.getElementById('smsPreview').addEventListener('input', () => {
+    const v = document.getElementById('smsPreview').value;
+    document.getElementById('charInfo').textContent = `${v.length}자 · ${v.length <= 90 ? 'SMS' : 'MMS 가능성'}`;
+  });
   document.getElementById('startSendBtn').addEventListener('click', () => { if(buildQueue()){ openSmsForCurrent(); } });
   document.getElementById('sendCurrentBtn').addEventListener('click', openSmsForCurrent);
   document.getElementById('markCurrentSentBtn').addEventListener('click', ()=>advanceQueue('success'));
   document.getElementById('markCurrentFailBtn').addEventListener('click', ()=>advanceQueue('fail'));
   document.getElementById('markCurrentPendingBtn').addEventListener('click', ()=>advanceQueue('pending'));
-  document.getElementById('markManualSentBtn').addEventListener('click', markAllManualSent);
+  
   document.getElementById('manageSearch').addEventListener('input', renderManagePage);
-  document.getElementById('manageFilter').addEventListener('change', renderManagePage);
-  document.getElementById('exportDataBtn').addEventListener('click', exportData);
-  document.getElementById('importDataInput').addEventListener('change', e => importData(e.target.files[0]));
-  document.getElementById('copyDefaultTemplateBtn').addEventListener('click', copyDefaultTemplate);
+  document.getElementById('manageFilter').addEventListener('change', function(){
+    const filter = this.value;
+    renderManagePage();
+    if(filter === 'moveGroup'){
+      // 검색된 첫 번째 그룹을 현재 발송 그룹으로 이동
+      const search = document.getElementById('manageSearch').value.trim().toLowerCase();
+      const matched = state.savedGroups.filter(group => {
+        if(!search) return true;
+        const hay = `${group.title} ${group.travelInfo.agency || ''} ${group.contacts.map(c=>`${c.name} ${c.phone}`).join(' ')}`.toLowerCase();
+        return hay.includes(search);
+      });
+      if(matched.length){
+        state.selectedGroupId = matched[0].id;
+        saveState(); renderManagePage(); renderSmsArea();
+        showToast(`"${matched[0].title}" 을 현재 발송 그룹으로 이동했습니다`, 'success');
+      } else {
+        showToast('검색 결과가 없습니다', 'error');
+      }
+      this.value = 'all';
+    } else if(filter === 'deleteGroup'){
+      // 검색된 첫 번째 그룹의 명단 전체를 한번에 삭제
+      const search = document.getElementById('manageSearch').value.trim().toLowerCase();
+      const matched = state.savedGroups.filter(group => {
+        if(!search) return true;
+        const hay = `${group.title} ${group.travelInfo.agency || ''} ${group.contacts.map(c=>`${c.name} ${c.phone}`).join(' ')}`.toLowerCase();
+        return hay.includes(search);
+      });
+      if(matched.length){
+        const target = matched[0];
+        const _cfm2 = document.createElement('div');
+        _cfm2.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
+        _cfm2.innerHTML = `
+          <div style="background:#1e1e2e;border-radius:16px;padding:24px 20px;max-width:290px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.5)">
+            <div style="font-size:15px;font-weight:800;color:var(--text1);margin-bottom:8px">"${escapeHtml(target.title)}"</div>
+            <div style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.5">명단 ${target.contacts.length}명을 전체 삭제하시겠습니까?<br>이 작업은 되돌릴 수 없습니다.</div>
+            <div style="display:flex;gap:8px">
+              <button id="_cfm2Cancel" style="flex:1;padding:11px;border-radius:10px;border:none;background:var(--surface3);color:var(--text2);font-size:14px;font-weight:700;cursor:pointer">취소</button>
+              <button id="_cfm2Ok" style="flex:1;padding:11px;border-radius:10px;border:none;background:#f87171;color:#fff;font-size:14px;font-weight:700;cursor:pointer">삭제</button>
+            </div>
+          </div>`;
+        document.body.appendChild(_cfm2);
+        _cfm2.querySelector('#_cfm2Cancel').addEventListener('click', ()=> _cfm2.remove());
+        _cfm2.querySelector('#_cfm2Ok').addEventListener('click', ()=>{
+          target.contacts = [];
+          saveState(); renderManagePage(); renderSmsArea();
+          showToast(`"${target.title}" 명단 전체 삭제 완료`, 'info');
+          _cfm2.remove();
+        });
+      } else {
+        showToast('검색 결과가 없습니다', 'error');
+      }
+      this.value = 'all';
+    }
+  });
+  // exportGroupVcfBtn 제거됨 — KPI 연락처저장 팝업에서 처리
   document.getElementById('newTemplateBtn').addEventListener('click', ()=>openTemplateEditor(null));
   document.getElementById('closeTemplateEditorBtn').addEventListener('click', closeTemplateEditor);
   document.getElementById('saveTemplateBtn').addEventListener('click', saveTemplateEditor);
