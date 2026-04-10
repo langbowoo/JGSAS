@@ -2514,26 +2514,7 @@ function openSmsForCurrent(){
   a.href = `sms:${contact.phone}?body=${encodeURIComponent(msg)}`;
   a.style.display = 'none';
   document.body.appendChild(a); a.click(); setTimeout(()=>a.remove(), 200);
-  showToast('📱 SMS 앱 열림 · 내용이 없으면 붙여넣기 하세요', 'info');
-  // AUTO-COMPLETE: SMS 앱에서 3초 이상 이탈 후 복귀 시에만 자동완료 처리
-  // (알림바·화면꺼짐 등 단순 이탈 오작동 방지)
-  let _smsAutoHandler = null;
-  let _smsLeaveTime = 0;
-  const _smsLeaveHandler = function(){
-    if(document.visibilityState === 'hidden') _smsLeaveTime = Date.now();
-  };
-  _smsAutoHandler = function(){
-    if(document.visibilityState === 'visible'){
-      document.removeEventListener('visibilitychange', _smsAutoHandler);
-      document.removeEventListener('visibilitychange', _smsLeaveHandler);
-      const elapsed = Date.now() - _smsLeaveTime;
-      if(elapsed >= 3000 && currentQueue.groupId && currentQueue.index >= 0 && currentQueue.index < currentQueue.ids.length){
-        setTimeout(()=>{ advanceQueue('success'); }, 300);
-      }
-    }
-  };
-  document.addEventListener('visibilitychange', _smsLeaveHandler);
-  document.addEventListener('visibilitychange', _smsAutoHandler);
+  showToast('SMS 앱을 열었습니다. 발송을 마친 뒤 "다음문자"를 눌러 주세요', 'info');
 }
 
 function openKakaoForCurrent(){
