@@ -11,8 +11,6 @@
    - 로컬 데이터 저장(localStorage)
    - Github 수동 배포/업데이트 전제
 ========================================================= */
-
-
 function normalizeTravelInfoFromForm(){
   // depDate: 숫자와 "." 만 허용, ".." 이상 연속 점 → "." 1개로 정규화
   const rawDepDate = document.getElementById('depDate').value.trim();
