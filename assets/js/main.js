@@ -1028,7 +1028,7 @@ function mergeDraftContacts(newContacts){
     }
   });
   state.extractedContactsDraft = [...phoneMap.values(), ...noPhoneItems];
-  _totalExtracted = state.extractedContactsDraft.length; // 최초 추출 전체인원 고정
+  _totalExtracted += newContacts.filter(c => c.phone).length; // 파일별 유효 번호 누적 합산
   saveState();
   renderDraftList();
 }
