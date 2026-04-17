@@ -1,6 +1,6 @@
 # CLAUDE.md — JGSAS 프로젝트 컨텍스트
 
-> 마지막 업데이트: 2026-04-18 | 버전: v2.0
+> 마지막 업데이트: 2026-04-18 | 버전: v2.1
 
 ---
 
@@ -124,6 +124,7 @@
 | v1.8 | extractFirstDayHotel에 [H] 마커 패턴 추가 (PDF 확정서 호텔명 자동 추출) |
 | v1.9 | PDF 추출 3종 버그 수정: normalizeText [H] 마커 보존, 제1일+날짜 동일줄 패턴, 제N일 기간 추론 |
 | v2.0 | 템플릿 기반 추출 엔진 추가: templates.json + main.js 엔진 6종 함수 + handleFileUpload 연결 + 5계층 fallback |
+| v2.1 | 전체인원 카운터 누적 불일치 수정: draftCountInline을 total(state.extractedContactsDraft.length) 기준으로 통일 |
 
 ---
 

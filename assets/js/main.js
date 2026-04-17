@@ -1610,7 +1610,7 @@ function renderDraftList(){
   const inlineDraftCount    = document.getElementById('draftCountInline');
   const inlineDupCount      = document.getElementById('dupCountInline');
   const inlineSelectedCount = document.getElementById('selectedCountInline');
-  if(inlineDraftCount)    inlineDraftCount.textContent    = `${_totalExtracted || total}명`; // 전체인원: 최초 추출 고정값
+  if(inlineDraftCount)    inlineDraftCount.textContent    = `${total}명`;
   if(inlineDupCount)      inlineDupCount.textContent      = duplicateCount;
   if(inlineSelectedCount) inlineSelectedCount.textContent = `${selectedWithPhone}명`;
   document.getElementById('selectAllDraft').checked = drafts.length > 0 && drafts.every(x => x.selected);
