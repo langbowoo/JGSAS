@@ -179,6 +179,7 @@ function buildGroupPreview(){
 function normalizeText(raw=''){
   return String(raw)
     .replace(/\r\n?/g,'\n')
+    .replace(/\[H\]/g, '§H§')  // [H] 마커 보호 — 브라켓 제거 전 임시 치환
     .replace(/[\uff10-\uff19]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
     .replace(/[\u2010\u2011\u2012\u2013\u2014\u2212\uff0d]/g,'-')
     .replace(/[\u00b7\u2022\u318d]/g,' ')
@@ -186,6 +187,7 @@ function normalizeText(raw=''){
     .replace(/[\uff0f]/g,'/')
     .replace(/[\u201c\u201d\u201e'`]/g,' ')
     .replace(/[()\[\]{}<>]/g,' ')
+    .replace(/§H§/g, '[H]')    // [H] 마커 복원
     .replace(/\t/g,' ')
     .replace(/[ ]{2,}/g,' ')
     .replace(/\n{3,}/g,'\n\n')
@@ -521,6 +523,11 @@ function extractTravelInfo(rawText){
       const m = line.match(/^기간\s+(\d{1,2})\/(\d{1,2})\/\d{2,4}/);
       if(m) result.depDate = `${parseInt(m[1],10)}.${parseInt(m[2],10)}`;
     }
+    // [FIX] PDF 테이블: "제1일 4/20 (월) ..." 동일 줄에 날짜 포함 패턴
+    if(!result.depDate){
+      const m = line.match(/(?:제\s*1\s*일|1일차)[^\d]*(\d{1,2})\/(\d{1,2})/);
+      if(m) result.depDate = `${parseInt(m[1],10)}.${parseInt(m[2],10)}`;
+    }
     // [FIX] 제1일 다음 행 M/D 또는 M/D/YY — "제1일" 행 다음줄에 날짜만 단독 기재된 경우
     if(!result.depDate && _prev1il){
       const m = line.match(/^(\d{1,2})\/(\d{1,2})(?:\/\d{2,4})?[\s\t]/) ||
@@ -670,9 +677,9 @@ function extractTravelInfo(rawText){
       if(m && line.length < 80) result.meetingPlace = line.trim().slice(0,60);
     }
     // 호텔명 추출 (1일차 우선 처리는 후처리에서)
-    // [FIX] "[H] 노쿠호텔 오사카 (...)" 패턴 — PDF 확정서 [H] 마커 형식
+    // [FIX] "[H] 노쿠호텔 오사카 (T.xxx)" 패턴 — 정규화 후 ()가 제거되므로 T./슬래시도 종결자로 처리
     if(!result.hotelName){
-      const mH = line.match(/^\[H\]\s*([가-힣A-Za-z0-9\s\-·\.]+?)(?:\s*[\(\（]|$)/);
+      const mH = line.match(/^\[H\]\s*([가-힣A-Za-z0-9\s\-·]+?)(?:\s+T\.\s*\d|\s*\/|\s*[\(\（]|$)/);
       if(mH && mH[1].trim().length > 1) result.hotelName = mH[1].trim().slice(0,50);
     }
     // [FIX] "호텔: 평성관(전화)" 패턴 — 호텔명이 호텔 뒤에 오는 코론 형태 우선 처리
@@ -750,6 +757,17 @@ function extractTravelInfo(rawText){
     }
   }
 
+  // 기간 보완: "제N일" 패턴에서 총 일수 추론 (확정서 테이블 형식)
+  if(!result.duration){
+    const dayNums = [...rawText.matchAll(/제\s*([2-9])\s*일/g)].map(m => parseInt(m[1],10));
+    if(dayNums.length > 0){
+      const maxDay = Math.max(...dayNums);
+      if(maxDay >= 2 && maxDay <= 14){
+        result.duration = `${maxDay-1}박${maxDay}일`;
+      }
+    }
+  }
+
   // 여러 호텔 중 1일차 기준 호텔 선택 처리
   result.hotelName = extractFirstDayHotel(text) || result.hotelName;
 
@@ -777,8 +795,9 @@ function extractFirstDayHotel(text){
     }
 
     if(in1stDay){
-      // 우선순위0: "[H] 노쿠호텔 오사카 (...)" PDF 확정서 마커 패턴
-      const mH0 = line.match(/^\[H\]\s+([가-힣A-Za-z0-9\s\-·\.]+?)(?:\s*\(|$)/);
+      // 우선순위0: "[H] 노쿠호텔 오사카 (T.xxx)" PDF 확정서 마커 패턴
+      // 정규화 후 ()가 제거되므로 T./슬래시도 종결자로 사용
+      const mH0 = line.match(/^\[H\]\s+([가-힣A-Za-z0-9\s\-·]+?)(?:\s+T\.\s*\d|\s*\/|\s*\(|$)/);
       if(mH0 && mH0[1].trim().length > 1){
         hotelFound = mH0[1].trim().slice(0,50);
         break;
