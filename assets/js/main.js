@@ -289,7 +289,7 @@ function extractContactsFromText(rawText, source='text'){
   });
   lineOffsets.forEach(({ line, offset }) => {
     // [FIX] 쓰루가이드/스루가이드 포함 행은 명단 추출 제외 (가이드 번호 오염 방지)
-    const GUIDE_SKIP_KEYWORDS = ['쓰루가이드','스루가이드','through guide','through-guide'];
+    const GUIDE_SKIP_KEYWORDS = ['쓰루가이드','스루가이드','through guide','through-guide','가이드 정보','가    이    드','t/g','tg'];
     if(GUIDE_SKIP_KEYWORDS.some(kw => line.toLowerCase().includes(kw))) return;
     if(line && findPhonesInText(line).length){
       consumePhoneOccurrence(line, text, offset);
@@ -338,7 +338,7 @@ async function parseExcelFile(file){
   // ── 1단계: 컬럼 구조 기반 추출 시도 (가이드명단 시트 전용) ──────────────
   // '핸드폰번호' 또는 '연락처' 헤더가 있는 시트를 구조형으로 처리
   const PHONE_HEADERS = ['핸드폰번호','핸드폰','연락처','전화번호','휴대폰','mobile','phone'];
-  const NAME_HEADERS  = ['한글명','이름','성명','name','고객명','탑승객'];
+  const NAME_HEADERS  = ['한글명','한글이름','이름','성명','name','고객명','탑승객'];
 
   for(const sheetName of wb.SheetNames){
     // '확정서' 등 일정표 시트는 건너뜀 — 가이드 번호 오염 방지
@@ -358,11 +358,16 @@ async function parseExcelFile(file){
     if(phoneCol < 0) continue; // 이 시트는 구조형 아님 → 건너뜀
 
     // 헤더 다음 행부터 데이터 추출
+    const EXCEL_GUIDE_KEYWORDS = ['가이드','t/g','tg','쓰루가이드','스루가이드'];
     const map = new Map();
     for(let r = headerRow + 1; r < rows.length; r++){
       const row = rows[r];
       const rawPhone = cellStr(row[phoneCol]).trim();
       const rawName  = nameCol >= 0 ? cellStr(row[nameCol]).trim() : '';
+
+      // 이름 또는 행 내 셀에 가이드 키워드 포함 시 해당 행 건너뜀
+      const rowTextLower = row.map(v => cellStr(v)).join(' ').toLowerCase();
+      if(EXCEL_GUIDE_KEYWORDS.some(kw => rowTextLower.includes(kw))) continue;
 
       const phone = normalizePhone(rawPhone);
       const name  = (rawName && rawName !== '이름 미확인') ? rawName : '이름 미확인';
@@ -509,6 +514,7 @@ function extractTravelInfo(rawText){
   // 출발일 추출 (우선순위: 명시적 라벨 > 행사기간 > 제1일 옆 datetime > 기타 datetime > 날짜 패턴)
   // [FIX] Excel datetime 직렬화 값(예: "2026-03-14 00:00:00") 및 행사기간 패턴 추가
   let _prev1il = false;
+  let _prevFromEmpty = false;
   for(const line of lines){
     // [FIX] "기간 1/14/26 ..." — 엑셀 '기간' 셀 + XLSX.js M/D/YY 직렬화 패턴
     if(!result.depDate){
@@ -517,7 +523,8 @@ function extractTravelInfo(rawText){
     }
     // [FIX] 제1일 다음 행 M/D 또는 M/D/YY — "제1일" 행 다음줄에 날짜만 단독 기재된 경우
     if(!result.depDate && _prev1il){
-      const m = line.match(/^(\d{1,2})\/(\d{1,2})(?:\/\d{2,4})?[\s\t]/);
+      const m = line.match(/^(\d{1,2})\/(\d{1,2})(?:\/\d{2,4})?[\s\t]/) ||
+                line.match(/^(\d{1,2})\/(\d{1,2})(\s*\([월화수목금토일]\))?$/);
       if(m && parseInt(m[2],10) !== 0) result.depDate = `${parseInt(m[1],10)}.${parseInt(m[2],10)}`;
     }
     if(!result.depDate){
@@ -553,7 +560,7 @@ function extractTravelInfo(rawText){
     }
     // 기간 추출
     if(!result.duration){
-      const m = line.match(/(?:기간|여행기간|일정)[:\s　]+(\d+박\s*\d+일|\d+일|\d+N\d+D)/i);
+      const m = line.match(/(?:기간|여행기간|일정)\s*[:\s　]*(\d+박\s*\d+일|\d+일|\d+N\d+D)/i);
       if(m) result.duration = m[1].replace(/\s/g,'');
     }
     if(!result.duration){
@@ -577,7 +584,12 @@ function extractTravelInfo(rawText){
         }
       }
     }
-    // 여행사 추출 — ①알려진 여행사 목록 → ②ATTN/수신 키워드 → ③기존 키워드 순 우선순위
+    // 여행사 추출 — ①알려진 여행사 목록 → ②ATTN/수신 키워드 → ③FROM 다음 줄 → ④기존 키워드 순 우선순위
+    // ② FROM: 다음 줄에 "여행사명 / 담당자" 형식이 오면 '/' 앞을 여행사명으로 채택
+    if(!result.agency && _prevFromEmpty && line.includes('/')){
+      const agencyCandidate = line.split('/')[0].trim();
+      if(agencyCandidate.length > 1 && agencyCandidate.length <= 30) result.agency = agencyCandidate;
+    }
     if(!result.agency){
       // ① 알려진 국내 여행사 목록 직접 매칭 (가장 정확)
       const KNOWN_AGENCIES = /하나투어|모두투어|노랑풍선|참좋은여행|롯데관광개발|롯데관광|교원투어|한진관광|레드캡투어|세중여행|세중|현대드림투어|SM\s*C&C|인터파크트리플|인터파크투어|마이리얼트립|온라인투어|야놀자|여기어때|타이드스퀘어|땡처리닷컴|웹투어|트립닷컴|아고다|부킹닷컴|익스피디아|호텔스닷컴|클룩|KKday|내일투어|내일여행|여행박사|혜초여행|팜투어|허니문리조트|샬레트래블|트레바리|유니드파트너스|국일여행사|온누리투어|자유투어|투어2000|롯데JTB|세계로여행|CJ투어|갤럭시아투어|참투어|우리투어|KRT|진에어투어|제주항공투어/;
@@ -658,6 +670,11 @@ function extractTravelInfo(rawText){
       if(m && line.length < 80) result.meetingPlace = line.trim().slice(0,60);
     }
     // 호텔명 추출 (1일차 우선 처리는 후처리에서)
+    // [FIX] "[H] 노쿠호텔 오사카 (...)" 패턴 — PDF 확정서 [H] 마커 형식
+    if(!result.hotelName){
+      const mH = line.match(/^\[H\]\s*([가-힣A-Za-z0-9\s\-·\.]+?)(?:\s*[\(\（]|$)/);
+      if(mH && mH[1].trim().length > 1) result.hotelName = mH[1].trim().slice(0,50);
+    }
     // [FIX] "호텔: 평성관(전화)" 패턴 — 호텔명이 호텔 뒤에 오는 코론 형태 우선 처리
     if(!result.hotelName){
       // 패턴A: "호텔: 평성관(전화번호)" or "호텔: 노보리벳츠 미야비테이 (전화번호)"
@@ -715,6 +732,8 @@ function extractTravelInfo(rawText){
     }
     // [FIX] 제1일 여부 추적 — 패턴B(제1일 다음행 M/D) 사용
     _prev1il = /^제\s*1\s*일|^1일차/.test(line);
+    // FROM: 다음 줄 여행사명 처리용 플래그
+    _prevFromEmpty = /^FROM\s*:\s*$/i.test(line);
   }
 
   // 여행지 보완: 일본 주요 지명 키워드 스캔 (문서 기반만)
