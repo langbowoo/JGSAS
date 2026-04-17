@@ -1,6 +1,6 @@
 const APP_META = {
   appName: 'JGSAS',
-  appVersion: '1.4',
+  appVersion: '1.5',
   schemaVersion: 2,
   lastUpdated: '2026-03-14',
   githubCheckUrl: '',
