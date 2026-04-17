@@ -475,6 +475,264 @@ const CONTACT_SIGNALS = [
   'passenger','인원','룸조인','대표자','탑승객','여행자'
 ];
 
+/* ══════════════════════════════════════════════════════════
+   템플릿 기반 추출 엔진 v1.0
+   Phase 2: 로더 + 캐시
+   Phase 3: 매칭 + 추출 함수 6종
+═══════════════════════════════════════════════════════════ */
+
+let _templateCache = null;
+let _templateLoadPromise = null;
+const TEMPLATE_CONFIDENCE_THRESHOLD = 0.4;
+
+const JP_DESTINATIONS_FOR_ENGINE = [
+  '도쿄','오사카','교토','홋카이도','후쿠오카','오키나와','나고야','삿포로',
+  '요나고','마쓰야마','히로시마','가고시마','나리타','간사이','오이타','벳푸',
+  '유후인','기후','하코다테','센다이','니가타','나가사키','구마모토','도치기',
+  '닛코','아키타','아오모리','모리오카','야마가타','후쿠시마','미야기','이와테'
+];
+
+async function loadExtractionTemplates(){
+  if(_templateCache !== null) return _templateCache;
+  if(_templateLoadPromise) return _templateLoadPromise;
+  _templateLoadPromise = fetch('./templates.json')
+    .then(r => {
+      if(!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    })
+    .then(data => {
+      _templateCache = Array.isArray(data.templates) ? data.templates : [];
+      console.info('[JGSAS] 템플릿 엔진: 로드 완료 (', _templateCache.length, '개)');
+      return _templateCache;
+    })
+    .catch(err => {
+      // L1/L2: 네트워크 오류 또는 JSON 파싱 오류 → 빈 배열 = fallback 신호
+      console.warn('[JGSAS] templates.json 로드 실패 — 하드코딩 fallback 사용', err);
+      _templateCache = [];
+      return _templateCache;
+    });
+  return _templateLoadPromise;
+}
+
+function matchTemplate(templates, normalizedText){
+  if(!templates || templates.length === 0) return null;
+  const lowerText = normalizedText.toLowerCase();
+  let best = null;
+  let bestScore = -1;
+  for(const tmpl of templates){
+    const detect = tmpl.detect;
+    if(!detect || !Array.isArray(detect.keywords)) continue;
+    const minMatches = detect.minMatches || 1;
+    let matched = 0;
+    for(const kw of detect.keywords){
+      if(lowerText.includes(kw.toLowerCase())) matched++;
+    }
+    if(matched < minMatches) continue;
+    const confidence = matched / detect.keywords.length;
+    const combinedScore = (tmpl.priority || 0) + confidence * 10;
+    if(combinedScore > bestScore){
+      bestScore = combinedScore;
+      best = { template: tmpl, confidence, matchedKeywords: matched };
+    }
+  }
+  return best;
+}
+
+function applyFieldPattern(line, patternStr){
+  try{
+    const regex = new RegExp(patternStr, 'i');
+    const m = line.match(regex);
+    if(!m) return null;
+    return m[1] !== undefined ? m[1] : m[0];
+  }catch(err){
+    // L5: 개별 패턴 컴파일 오류 → 해당 패턴 스킵
+    console.warn('[JGSAS] 패턴 컴파일 오류 (L5 skip):', patternStr, err.message);
+    return null;
+  }
+}
+
+function applyTransform(value, transformKey){
+  if(!value) return '';
+  const v = String(value).trim();
+  if(!transformKey) return v;
+  if(transformKey.startsWith('literal:')) return transformKey.slice(8);
+  switch(transformKey){
+    case 'dateNormalize':{
+      const m1 = v.match(/^(\d{1,2})[\/\-](\d{1,2})/);
+      if(m1) return `${parseInt(m1[1],10)}.${parseInt(m1[2],10)}`;
+      const m2 = v.match(/(\d{1,2})월\s*(\d{1,2})일/);
+      if(m2) return `${parseInt(m2[1],10)}.${parseInt(m2[2],10)}`;
+      const m3 = v.match(/^(\d{2})-(\d{2})$/);
+      if(m3) return `${parseInt(m3[1],10)}.${parseInt(m3[2],10)}`;
+      return v;
+    }
+    case 'timeNormalize':{
+      if(/^\d{1,2}:\d{2}$/.test(v)){
+        const h = parseInt(v.split(':')[0], 10);
+        const mm = v.split(':')[1];
+        const ampm = h < 12 ? '오전' : '오후';
+        const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+        return `${ampm} ${String(h12).padStart(2,'0')}:${mm}`;
+      }
+      return v;
+    }
+    case 'flightNormalize':
+      return v.replace(/\s/g,'').toUpperCase();
+    case 'hotelNameClean':{
+      let name = v.replace(/[\s\-]*[A-Za-z]?\.?[\s\-]*[\d]{3,}[\d\-\s]*$/,'').trim();
+      name = name.replace(/\s+[A-Za-z]{1,3}\.?\s*$/,'').trim();
+      return name.slice(0,50);
+    }
+    case 'durationNormalize':
+      return v.replace(/\s/g,'');
+    case 'trimFirst':
+      return v.split(/\s{2,}/)[0].slice(0,20);
+    case 'trimSlice30':
+      return v.slice(0,30);
+    case 'trimSlice60':
+      return v.slice(0,60);
+    case 'trim':
+    default:
+      return v;
+  }
+}
+
+function applyKnownValues(text, knownValues){
+  if(!Array.isArray(knownValues)) return null;
+  for(const val of knownValues){
+    if(text.includes(val)) return val;
+  }
+  return null;
+}
+
+function applyEngineFallback(fallbackKey, lines, fullText){
+  switch(fallbackKey){
+    case 'jpDestinationScan':
+      for(const dest of JP_DESTINATIONS_FOR_ENGINE){
+        if(fullText.includes(dest)) return dest;
+      }
+      return null;
+    case 'durationFromRange':{
+      for(const line of lines){
+        const m = line.match(/(?:행사기간|여행기간)[^\d]*\d{4}\s+(\d{1,2})[\/\-](\d{1,2})\s*[~\-～]\s*(\d{1,2})[\/\-](\d{1,2})/i);
+        if(m){
+          const year = new Date().getFullYear();
+          const diffMs = new Date(year, parseInt(m[3],10)-1, parseInt(m[4],10))
+                       - new Date(year, parseInt(m[1],10)-1, parseInt(m[2],10));
+          const totalDays = Math.round(diffMs/86400000) + 1;
+          const nights = totalDays - 1;
+          if(totalDays > 0 && totalDays <= 30){
+            return nights > 0 ? `${nights}박${totalDays}일` : `${totalDays}일`;
+          }
+        }
+      }
+      const dayNums = [...fullText.matchAll(/제\s*([2-9])\s*일/g)].map(m2 => parseInt(m2[1],10));
+      if(dayNums.length > 0){
+        const maxDay = Math.max(...dayNums);
+        if(maxDay >= 2 && maxDay <= 14) return `${maxDay-1}박${maxDay}일`;
+      }
+      return null;
+    }
+    default:
+      return null;
+  }
+}
+
+function extractFieldFromTemplate(lines, fullText, fieldDef){
+  // 1. knownValues 직접 매칭 (우선순위 최고)
+  if(fieldDef.knownValues){
+    const found = applyKnownValues(fullText, fieldDef.knownValues);
+    if(found) return applyTransform(found, fieldDef.transform);
+  }
+  // 2. 패턴 줄별 순서대로 시도
+  if(Array.isArray(fieldDef.patterns)){
+    for(const patternStr of fieldDef.patterns){
+      for(const line of lines){
+        const raw = applyFieldPattern(line, patternStr);
+        if(raw && raw.trim()) return applyTransform(raw, fieldDef.transform);
+      }
+    }
+  }
+  // 3. fallback 함수 호출
+  if(fieldDef.fallback){
+    const raw = applyEngineFallback(fieldDef.fallback, lines, fullText);
+    if(raw) return applyTransform(raw, fieldDef.transform);
+  }
+  return null;
+}
+
+function extractByTemplate(template, normalizedText, allTemplates){
+  // inherits 처리 (1단계)
+  let fields = {};
+  if(template.inherits){
+    const parent = (allTemplates || []).find(t => t.id === template.inherits);
+    if(parent && parent.fields) fields = {...parent.fields};
+  }
+  if(template.fields) fields = {...fields, ...template.fields};
+
+  const lines = normalizedText.split('\n').map(l => l.trim()).filter(Boolean);
+  const result = {
+    depDate:'', destination:'', duration:'', agency:'',
+    flightOut:'', flightIn:'', meetingTime:'', meetingPlace:'',
+    hotelName:'', hotelPhone:'', extraMemo:''
+  };
+  const matchedPatterns = {};
+
+  for(const [fieldKey, fieldDef] of Object.entries(fields)){
+    if(!(fieldKey in result)) continue;
+    const extracted = extractFieldFromTemplate(lines, normalizedText, fieldDef);
+    if(extracted){
+      result[fieldKey] = extracted;
+      matchedPatterns[fieldKey] = fieldDef.knownValues ? 'knownValues' : 'patterns';
+    }
+  }
+  return { result, matchedPatterns };
+}
+
+async function extractTravelInfoByTemplate(rawText){
+  // L1/L2: 로드 실패 시 _templateCache=[] → length===0 분기로 null 반환
+  const templates = await loadExtractionTemplates();
+  if(templates.length === 0) return null;
+
+  const normalizedText = normalizeText(rawText);
+  const matchResult = matchTemplate(templates, normalizedText);
+
+  // L3: 매칭 템플릿 없음
+  if(!matchResult){
+    console.warn('[JGSAS] 템플릿 미매칭 — 하드코딩 fallback 예정');
+    return null;
+  }
+
+  const { template, confidence } = matchResult;
+  const baseReturn = {
+    templateId: template.id,
+    templateName: template.name,
+    confidence,
+    result: null,
+    matchedPatterns: {}
+  };
+
+  // L4: 신뢰도 임계값 미달 → templateId는 반환하되 result=null (fallback 신호)
+  if(confidence < TEMPLATE_CONFIDENCE_THRESHOLD){
+    console.warn('[JGSAS] 신뢰도 미달', confidence.toFixed(2), '< threshold', TEMPLATE_CONFIDENCE_THRESHOLD);
+    return baseReturn;
+  }
+
+  console.info('[JGSAS] 템플릿 매칭:', template.id, `(${template.name})`, `신뢰도 ${(confidence*100).toFixed(0)}%`);
+
+  // 유효 추출 필드가 없으면 (연락처 전용 템플릿) result=null
+  const effectiveFields = {
+    ...(template.inherits ? ((templates.find(t => t.id === template.inherits) || {}).fields || {}) : {}),
+    ...(template.fields || {})
+  };
+  if(Object.keys(effectiveFields).length === 0){
+    return baseReturn;
+  }
+
+  const { result, matchedPatterns } = extractByTemplate(template, normalizedText, templates);
+  return { ...baseReturn, result, matchedPatterns };
+}
+
 /* ── STEP1: 문서 유형 판별 ──────────────────────────── */
 function detectTravelDocumentType(rawText, fileType){
   const text = rawText.toLowerCase();
@@ -1135,6 +1393,7 @@ async function handleFileUpload(file, kind){
     fileName: file.name, fileType: kind,
     docType:'unknown', travelScore:0, contactScore:0, phoneMatches:0,
     travelFound:false, contactsFound:false, contactCount:0,
+    templateId: null, templateConfidence: 0,
     filledFields:[], warnings:[], failureLines:[], elapsed:0
   };
 
@@ -1164,9 +1423,29 @@ async function handleFileUpload(file, kind){
     diagResult.contactScore = typeResult.contactScore;
     diagResult.phoneMatches = typeResult.phoneMatches;
 
+    // ── 2.5 템플릿 식별 (전체 문서 대상 — 연락처 전용 포함) ──
+    const templateResult = await extractTravelInfoByTemplate(travelText || contactText).catch(e => {
+      console.warn('[JGSAS] 템플릿 엔진 오류:', e);
+      return null;
+    });
+    if(templateResult){
+      diagResult.templateId         = templateResult.templateId;
+      diagResult.templateConfidence = templateResult.confidence;
+    }
+
     // ── 3. 여행정보 추출 (travel_only / mixed) ──
     if(typeResult.docType === 'travel_only' || typeResult.docType === 'mixed'){
-      const rawInfo = extractTravelInfo(travelText || contactText);
+      let rawInfo = null;
+      if(templateResult && templateResult.result !== null){
+        // 템플릿 엔진 추출 결과 사용
+        rawInfo = templateResult.result;
+        console.info('[JGSAS] 템플릿 엔진 추출 적용:', templateResult.templateId);
+      } else {
+        // L3/L4: 기존 하드코딩 extractTravelInfo fallback
+        console.warn('[JGSAS] 기존 하드코딩 extractTravelInfo fallback 사용');
+        rawInfo = extractTravelInfo(travelText || contactText);
+        if(!diagResult.templateId) diagResult.templateId = 'fallback-hardcoded';
+      }
       const { info, travelFound } = normalizeTravelInfo(rawInfo);
       diagResult.travelFound = travelFound;
       if(travelFound){
@@ -2586,6 +2865,8 @@ loadState();
 initTagButtons();
 bindEvents();
 hydrateUI();
+// 템플릿 사전 로드 — 첫 파일 업로드 전 캐시 (실패해도 앱 동작 보장)
+loadExtractionTemplates();
 
 /* ── 뒤로가기 SPA 지원 (v4e 추가) ─────────────────────
    최초 로드 시 현재 탭(schedule)을 history 기준점으로 등록.

@@ -1,6 +1,6 @@
 # CLAUDE.md — JGSAS 프로젝트 컨텍스트
 
-> 마지막 업데이트: 2026-04-17 | 버전: v1.9
+> 마지막 업데이트: 2026-04-18 | 버전: v2.0
 
 ---
 
@@ -34,18 +34,19 @@
 ```
 /
 ├── index.html              ← HTML 구조 (337줄) — CDN 로드 + assets 참조
+├── templates.json          ← 템플릿 기반 추출 엔진 패턴 정의 (v2.0 신규)
 ├── assets/
 │   ├── css/
 │   │   └── app.css         ← 전체 CSS 스타일 (189줄)
 │   └── js/
 │       ├── core.js         ← 상수·상태 초기화·localStorage 입출력 (154줄)
-│       ├── main.js         ← 핵심 로직 전체 (2590줄)
+│       ├── main.js         ← 핵심 로직 전체 (~2900줄)
 │       └── pin.js          ← PIN 잠금 시스템 (205줄)
 ├── index_backup.html       ← 백업본
 ├── README.md               ← GitHub 표시용
 └── CLAUDE.md               ← 이 파일
 ```
-> **총 코드량**: ~3,475줄 (파일 분리 후에도 단일 기준 동일)
+> **총 코드량**: ~3,780줄
 > **manifest.json / sw.js**: PWA 홈화면 설치용 — 아직 미추가 (TODO)
 
 ### 탭 구성 (4개)
@@ -122,13 +123,14 @@
 | v1.7 | 명단추출 헤더 확장(한글이름), 가이드번호 오염 방지(Excel·텍스트 양쪽), PDF 여행정보 추출 보완(출발일·기간·호텔·여행사) |
 | v1.8 | extractFirstDayHotel에 [H] 마커 패턴 추가 (PDF 확정서 호텔명 자동 추출) |
 | v1.9 | PDF 추출 3종 버그 수정: normalizeText [H] 마커 보존, 제1일+날짜 동일줄 패턴, 제N일 기간 추론 |
+| v2.0 | 템플릿 기반 추출 엔진 추가: templates.json + main.js 엔진 6종 함수 + handleFileUpload 연결 + 5계층 fallback |
 
 ---
 
 ## 개발 원칙 및 주의사항
 
 ### 절대 규칙
-1. **파일 구조 유지** — `index.html` + `assets/css/app.css` + `assets/js/{core,main,pin}.js`. 추가 파일 분리 시 반드시 논의.
+1. **파일 구조 유지** — `index.html` + `templates.json` + `assets/css/app.css` + `assets/js/{core,main,pin}.js`. 추가 파일 분리 시 반드시 논의.
 2. **서버 연동 없음** — localStorage만 사용. DB, API 추가 절대 금지.
 3. **CDN 라이브러리** — xlsx, pdf.js, mammoth는 cdnjs 동기 로드. 동적 삽입 금지.
 4. **모바일 최우선** — Android Chrome 기준으로 UI 검증. 터치 인터랙션 최적화.
