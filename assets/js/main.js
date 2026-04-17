@@ -777,6 +777,12 @@ function extractFirstDayHotel(text){
     }
 
     if(in1stDay){
+      // 우선순위0: "[H] 노쿠호텔 오사카 (...)" PDF 확정서 마커 패턴
+      const mH0 = line.match(/^\[H\]\s+([가-힣A-Za-z0-9\s\-·\.]+?)(?:\s*\(|$)/);
+      if(mH0 && mH0[1].trim().length > 1){
+        hotelFound = mH0[1].trim().slice(0,50);
+        break;
+      }
       // 우선순위1: "HOTEL: 힐튼 후쿠오카..." 영문 패턴
       const mH = line.match(/HOTEL\s*:\s*([가-힣A-Za-z0-9\s\-·\.]+)/i);
       if(mH && mH[1].trim().length > 1){
