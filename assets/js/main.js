@@ -30,6 +30,7 @@ function normalizeTravelInfoFromForm(){
   state.currentTravelInfo.weatherMin = (document.getElementById('weatherMin')?.value || '').trim();
   state.currentTravelInfo.weatherMax = (document.getElementById('weatherMax')?.value || '').trim();
   state.currentTravelInfo.weatherNotice = (document.getElementById('weatherNotice')?.value || '').trim();
+  state.currentTravelInfo.baggageKg = (document.getElementById('baggageKg')?.value || '').trim();
 }
 
 function bindTravelInfoToForm(){
@@ -48,6 +49,7 @@ function bindTravelInfoToForm(){
   if(document.getElementById('weatherMin')) document.getElementById('weatherMin').value = t.weatherMin || '';
   if(document.getElementById('weatherMax')) document.getElementById('weatherMax').value = t.weatherMax || '';
   if(document.getElementById('weatherNotice')) document.getElementById('weatherNotice').value = t.weatherNotice || '';
+  if(document.getElementById('baggageKg')) document.getElementById('baggageKg').value = t.baggageKg || '';
 }
 
 function openGuideEdit(){
@@ -1118,7 +1120,7 @@ function normalizeTravelInfo(rawInfo){
 
 /* ── STEP4: 기존 폼에 자동 채움 ─────────────────────── */
 function autofillTravelForm(info){
-  const fieldIds = ['depDate','destination','duration','agency','flightOut','flightIn','meetingTime','meetingPlace','hotelName','hotelPhone','extraMemo','weatherMin','weatherMax','weatherNotice'];
+  const fieldIds = ['depDate','destination','duration','agency','flightOut','flightIn','meetingTime','meetingPlace','hotelName','hotelPhone','extraMemo','weatherMin','weatherMax','weatherNotice','baggageKg'];
   const filled = [];
   const skipped = [];
   fieldIds.forEach(id => {
@@ -1527,7 +1529,7 @@ function resetExtract(){
   // 여행기본정보 초기화
   const fields = ['depDate','destination','duration','agency','flightOut','flightIn',
                   'meetingTime','meetingPlace','hotelName','hotelPhone',
-                  'weatherMin','weatherMax','weatherNotice','extraMemo'];
+                  'weatherMin','weatherMax','weatherNotice','extraMemo','baggageKg'];
   fields.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
   buildGroupPreview();
   // 임시명단 초기화
@@ -1547,7 +1549,7 @@ function resetExtract(){
 function resetTravelInfo(){
   const fields = ['depDate','destination','duration','agency','flightOut','flightIn',
                   'meetingTime','meetingPlace','hotelName','hotelPhone',
-                  'weatherMin','weatherMax','weatherNotice','extraMemo'];
+                  'weatherMin','weatherMax','weatherNotice','extraMemo','baggageKg'];
   fields.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
   buildGroupPreview(); // state 동기화 + 미리보기 갱신 + saveState 호출
   showToast('여행 정보를 초기화했습니다', 'info');
@@ -1777,6 +1779,7 @@ function resolveTags(raw, context={}){
   const wMin    = info.weatherMin    || (document.getElementById('weatherMin')?.value || '').trim();
   const wMax    = info.weatherMax    || (document.getElementById('weatherMax')?.value || '').trim();
   const wNotice = info.weatherNotice || (document.getElementById('weatherNotice')?.value || '').trim();
+  const bagKg   = info.baggageKg    || (document.getElementById('baggageKg')?.value || '').trim();
 
   const rep = {
     '{이름}': firstName,
@@ -1801,7 +1804,9 @@ function resolveTags(raw, context={}){
     // 신규 날씨 태그
     '{기온최저}': wMin,
     '{기온최고}': wMax,
-    '{날씨안내}': wNotice
+    '{날씨안내}': wNotice,
+    // 기본 수화물
+    '{기본수화물}': bagKg ? `${bagKg}kg` : ''
   };
 
   let result = TAGS.reduce((acc, tag) => acc.split(tag).join(rep[tag] ?? tag), raw);
@@ -1901,6 +1906,10 @@ function renderQueue(){
   // BUG-06 FIX: 삭제된 템플릿 ID 참조 시 기본 템플릿으로 fallback
   const tpl = findTemplate(currentQueue.templateId) || getDefaultTemplate();
   const msg = resolveTags(tpl.content, { group, contact });
+  // smsPreview를 현재 대상 기준으로 갱신 (다음문자 시 이름 고정 버그 수정)
+  const smsEl = document.getElementById('smsPreview');
+  const charEl = document.getElementById('charInfo');
+  if(smsEl){ smsEl.value = msg; if(charEl) charEl.textContent = `${msg.length}자 · ${msg.length <= 90 ? 'SMS' : 'MMS 가능성'}`; }
   const doneCount = currentQueue.index;
   const totalCount = currentQueue.ids.length;
   document.getElementById('queueInfo').textContent = `완료 ${doneCount} / ${totalCount}명`;
@@ -2696,10 +2705,13 @@ function formatMeetingTime(val){
 
 function bindEvents(){
   document.querySelectorAll('.tab').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
-  ['depDate','destination','duration','agency','flightOut','flightIn','meetingTime','meetingPlace','hotelName','hotelPhone','extraMemo','weatherMin','weatherMax','weatherNotice'].forEach(id => {
+  ['depDate','destination','duration','agency','flightOut','flightIn','meetingTime','meetingPlace','hotelName','hotelPhone','extraMemo','weatherMin','weatherMax','weatherNotice','baggageKg'].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.addEventListener('input', buildGroupPreview);
   });
+  // 기본 수화물: 숫자만 허용
+  const baggageKgEl = document.getElementById('baggageKg');
+  if(baggageKgEl) baggageKgEl.addEventListener('input', function(){ this.value = this.value.replace(/[^0-9]/g, ''); });
   // 미팅시간 입력 완료(blur) 시 자동 포맷 변환
   const meetingTimeEl = document.getElementById('meetingTime');
   if(meetingTimeEl){

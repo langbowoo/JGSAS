@@ -169,16 +169,24 @@ Mobile PWA HTML App
         <div class="field"><label class="label">최저기온</label><input class="input" id="weatherMin" placeholder="예: 6" inputmode="numeric"></div>
         <div class="field"><label class="label">최고기온</label><input class="input" id="weatherMax" placeholder="예: 14" inputmode="numeric"></div>
       </div>
-      <div class="field"><label class="label">날씨 안내</label><input class="input" id="weatherNotice" placeholder="예: 대체로 맑음, 오후 일부 구름"></div>
+      <div class="travel-grid-2">
+        <div class="field"><label class="label">날씨 안내</label><input class="input" id="weatherNotice" placeholder="예: 대체로 맑음"></div>
+        <div class="field"><label class="label">기본 수화물</label>
+          <div style="display:flex;align-items:center;gap:6px">
+            <input class="input" id="baggageKg" placeholder="예: 23" inputmode="numeric" style="flex:1;min-width:0">
+            <span style="color:var(--text2);font-size:15px;font-weight:600;flex-shrink:0">kg</span>
+          </div>
+        </div>
+      </div>
       <!-- 추가메모 + 연락처 저장 미리보기 가로 배치 -->
       <div style="display:flex;gap:12px;align-items:stretch;margin-bottom:0">
-        <div class="preview-box" style="width:160px;flex-shrink:0;min-width:0;display:flex;flex-direction:column;justify-content:center">
-          <div class="label" style="margin-bottom:5px;white-space:nowrap;font-size:10px">연락처 저장 미리보기</div>
+        <div class="preview-box" style="width:160px;flex-shrink:0;min-width:0;display:flex;flex-direction:column;justify-content:center;padding:8px 10px">
+          <div class="label" style="margin-bottom:3px;white-space:nowrap;font-size:10px">연락처 저장 미리보기</div>
           <div class="preview-text" id="groupPreview" style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">3.8요나고4일노랑풍선</div>
         </div>
         <div class="field" style="flex:1;min-width:0;margin-bottom:0">
           <label class="label">추가 메모</label>
-          <textarea class="textarea" id="extraMemo" placeholder="예: 보조배터리 주의" style="min-height:68px;resize:vertical;width:100%"></textarea>
+          <textarea class="textarea" id="extraMemo" placeholder="예: 보조배터리 주의" style="min-height:40px;resize:vertical;width:100%"></textarea>
         </div>
       </div>
     </div>
