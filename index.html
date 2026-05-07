@@ -173,9 +173,9 @@ Mobile PWA HTML App
       <div class="travel-grid-2">
         <div class="field"><label class="label">날씨 안내</label><input class="input" id="weatherNotice" placeholder="예: 대체로 맑음"></div>
         <div class="field"><label class="label">기본 수화물</label>
-          <div style="display:flex;align-items:center;gap:6px">
-            <input class="input" id="baggageKg" placeholder="예: 23" inputmode="numeric" style="flex:1;min-width:0">
-            <span style="color:var(--text2);font-size:15px;font-weight:600;flex-shrink:0">kg</span>
+          <div style="position:relative">
+            <input class="input" id="baggageKg" placeholder="예: 23" inputmode="numeric" style="width:100%;padding-right:36px;box-sizing:border-box">
+            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--text2);font-size:15px;font-weight:600;pointer-events:none">kg</span>
           </div>
         </div>
       </div>
