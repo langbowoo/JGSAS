@@ -1910,19 +1910,28 @@ function renderQueue(){
   const smsEl = document.getElementById('smsPreview');
   const charEl = document.getElementById('charInfo');
   if(smsEl){ smsEl.value = msg; if(charEl) charEl.textContent = `${msg.length}자 · ${msg.length <= 90 ? 'SMS' : 'MMS 가능성'}`; }
-  const doneCount = currentQueue.index;
-  const totalCount = currentQueue.ids.length;
+  // 이전 세션에서 성공 처리된 연락처 (group.contacts 순서 기준)
+  const prevSentSet = new Set(
+    state.sendLogs
+      .filter(l => l.groupId === group.id && l.status === 'success')
+      .map(l => l.contactId)
+  );
+  const prevSentContacts = group.contacts.filter(c => prevSentSet.has(c.id));
+  // 이번 세션에서 처리된 연락처 (queue 순서 기준)
+  const sessionSentContacts = currentQueue.ids.slice(0, currentQueue.index)
+    .map(id => group.contacts.find(c => c.id === id)).filter(Boolean)
+    .filter(c => !prevSentSet.has(c.id));
+  const allSentContacts = [...prevSentContacts, ...sessionSentContacts];
+  const doneCount = allSentContacts.length;
+  const totalCount = group.contacts.length;
   document.getElementById('queueInfo').textContent = `완료 ${doneCount} / ${totalCount}명`;
-  const sentIds = currentQueue.ids.slice(0, doneCount);
-  const sentListHtml = sentIds.map(id => {
-    const c = group.contacts.find(x => x.id === id);
-    if(!c) return '';
-    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+  const sentListHtml = allSentContacts.map(c =>
+    `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)">
       <span style="color:var(--accent2);font-size:14px">✅</span>
       <span style="font-size:13px;font-weight:700">${escapeHtml(c.name)}</span>
       <span style="font-size:12px;color:var(--muted);font-family:'Space Mono',monospace">${escapeHtml(c.phone)}</span>
-    </div>`;
-  }).join('');
+    </div>`
+  ).join('');
   container.className = '';
   container.innerHTML = `
     <div class="contact-item selected" style="margin-bottom:8px">

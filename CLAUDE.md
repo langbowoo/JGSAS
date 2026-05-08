@@ -1,6 +1,24 @@
-# CLAUDE.md — JGSAS 프로젝트 컨텍스트
+# CLAUDE.md
 
-> 마지막 업데이트: 2026-05-08 | 버전: v2.5
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+> 마지막 업데이트: 2026-05-08 | 버전: v2.6
+
+---
+
+## 빌드 및 개발 환경
+
+빌드 도구, 번들러, 패키지 매니저, 테스트 프레임워크가 **없다.** 순수 HTML+CSS+JS이며 GitHub Pages로 정적 파일을 그대로 서빙한다.
+
+```bash
+# 로컬 확인 (브라우저에서 직접 열기)
+# file:// 로 열면 mammoth.js CDN 로드가 실패하므로 반드시 HTTP 서버 사용
+python -m http.server 8080   # 또는 npx serve .
+
+# 배포 (GitHub Pages 자동 배포)
+git add . && git commit -m "feat: ..." && git push
+# → https://langbowoo.github.io/JGSAS/ 에 즉시 반영
+```
 
 ---
 
@@ -73,15 +91,33 @@
 - 여행정보 + 고객명단 분리 추출 → 폼 자동 채움
 - 추출 후 추가 파일 업로드 가능 + 스마트 병합 지원
 
+**5계층 fallback 순서** (`handleFileUpload` 내부):
+1. `templates.json` 패턴 매칭 (여행사별 특화 규칙)
+2. 문서 유형 판별 (`classifyDocument`) → `mixed` / `contacts_only` / `travel_only`
+3. Excel 헤더 기반 컬럼 탐지 (`extractContactsFromExcel`)
+4. 정규식 직접 스캔 (`extractContactsFromText`)
+5. 빈 결과 시 사용자 알림
+
+**templates.json 구조**: 각 템플릿은 `id`, `name`, `priority`, `detect.keywords`, `detect.minMatches` 를 가짐. `inherits` 로 다른 템플릿을 확장 가능. `fields` 에서 각 여행정보 필드의 추출 패턴/변환 규칙을 정의.
+
 ### SMS 발송 흐름
 1. 그룹 선택 → 수신자 체크 → 템플릿 선택 → 미리보기 → 발송
 2. 발송 상태: 미발송 / 발송완료(green) / 실패(red)
 3. 발송 이력 localStorage 저장
 
+**SMS 태그 치환**: `TAGS` 배열(core.js:25)에 정의된 `{이름}`, `{출발일}`, `{출발일요일}`, `{여행지}`, `{기간}`, `{여행사}`, `{출국편}`, `{귀국편}`, `{미팅시간}`, `{미팅장소}`, `{최저기온}`, `{최고기온}`, `{날씨안내}`, `{호텔명}`, `{호텔전화}`, `{가이드}`, `{가이드연락처}`, `{추가메모}`, `{기본수화물}` 등. `{출발일요일}`은 `depDayOfWeek()` 함수로 런타임 계산.
+
+**renderQueue 흐름**: `currentQueue = { groupId, templateId, ids[], index }` — `renderQueue()` 가 index를 순회하며 `#smsPreview` textarea를 갱신. "다음문자" 버튼은 index++.
+
 ### 데이터 저장 (localStorage)
 - `departureNoticeAppData_v3` — 전체 앱 상태 (그룹·연락처·여행정보·템플릿·가이드 프로필 포함)
 - `jgsas_header_hidden` — 헤더 숨김 상태 (`'1'` / `'0'`)
 - `jgsas_pin_state` — PIN 상태 (SHA-256 해시 저장, 실패 횟수, 잠금 시각 등)
+
+### VCF 저장 흐름 (v2.5 신설)
+- `saveContactToPhoneSingle(contact, groupId)` — 단일 연락처를 VCF Blob으로 변환해 `<a download>` 트리거
+- `phoneSaveLogs[contactId]` — 저장 일시 기록 (`state` 내 객체, `saveState()` 로 영속화)
+- VCF `FN` 필드는 `sanitizeLine()` 으로 줄바꿈 문자 제거
 
 ### 뒤로가기 지원
 - History API (`pushState` / `popstate`) 로 SPA 탭 이동 처리
@@ -129,6 +165,7 @@
 | v2.3 | renderQueue smsPreview 미갱신 수정: 다음문자 시 이름 고정 버그 해결 (현재 대상 contact 기준으로 textarea 업데이트) |
 | v2.4 | 기본 수화물 필드 추가: 여행기본정보에 baggageKg 입력(숫자 전용, kg 자동 표시), 날씨안내 옆 같은 행 배치, 문자 템플릿 {기본수화물} 치환 지원 |
 | v2.5 | 관리탭 UI/기능 전면 개편: 해피콜 시스템 제거 → 폰저장(VCF) 시스템 신설(phoneSaveLogs 상태, saveContactToPhoneSingle, 저장완료 모달·개별삭제), 연락처 카드 버튼 재편(해피콜 tel: + 폰저장 VCF blob), KPI "연락처저장"→"폰저장" 카운팅, VCF FN sanitizeLine 적용, CSS .cc-btn-row/.cc-btn/.cc-btn-save 신규 추가 |
+| v2.6 | 발송 큐 카운터·완료 목록 버그 수정: doneCount/totalCount를 이전 세션 sendLogs 합산 기준으로 전환(이전 세션 완료자 누락 해소), totalCount를 group.contacts.length 기준으로 수정(전체 인원 정상 표시), sentListHtml을 prevSentContacts+sessionSentContacts 누적으로 변경 |
 
 ---
 
