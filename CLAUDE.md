@@ -127,7 +127,7 @@
 | v2.1 | 전체인원 카운터 누적 불일치 수정: draftCountInline을 total(state.extractedContactsDraft.length) 기준으로 통일 |
 | v2.2 | core.js APP_META appVersion '1.4' → '1.5' 버전 업 |
 | v2.3 | renderQueue smsPreview 미갱신 수정: 다음문자 시 이름 고정 버그 해결 (현재 대상 contact 기준으로 textarea 업데이트) |
-| v2.4 | 기본무료수화물 필드 추가: 여행기본정보에 baggageKg 입력(숫자 전용, kg 자동 표시), 날씨안내 옆 같은 행 배치, 문자 템플릿 {기본수화물} 치환 지원 |
+| v2.4 | 기본 수화물 필드 추가: 여행기본정보에 baggageKg 입력(숫자 전용, kg 자동 표시), 날씨안내 옆 같은 행 배치, 문자 템플릿 {기본수화물} 치환 지원 |
 
 ---
 
@@ -155,12 +155,6 @@
 - 배포 URL: `https://langbowoo.github.io/JGSAS/`
 - 브랜치: main
 - git 설정: username `수고38` / email `jungil6633@gmail.com`
-
----
-
-## 미해결 과제 / TODO
-
-- [ ] PWA manifest.json + sw.js 추가 (홈화면 설치 시 주소표시줄 제거,앱 느낌)
 
 ---
 
