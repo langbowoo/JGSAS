@@ -1,6 +1,6 @@
 # CLAUDE.md — JGSAS 프로젝트 컨텍스트
 
-> 마지막 업데이트: 2026-05-08 | 버전: v2.4
+> 마지막 업데이트: 2026-05-08 | 버전: v2.5
 
 ---
 
@@ -33,20 +33,20 @@
 ### 파일 구성
 ```
 /
-├── index.html              ← HTML 구조 (337줄) — CDN 로드 + assets 참조
+├── index.html              ← HTML 구조 (346줄) — CDN 로드 + assets 참조
 ├── templates.json          ← 템플릿 기반 추출 엔진 패턴 정의 (v2.0 신규)
 ├── assets/
 │   ├── css/
-│   │   └── app.css         ← 전체 CSS 스타일 (189줄)
+│   │   └── app.css         ← 전체 CSS 스타일 (195줄)
 │   └── js/
 │       ├── core.js         ← 상수·상태 초기화·localStorage 입출력 (154줄)
-│       ├── main.js         ← 핵심 로직 전체 (~2900줄)
+│       ├── main.js         ← 핵심 로직 전체 (~2910줄)
 │       └── pin.js          ← PIN 잠금 시스템 (205줄)
 ├── index_backup.html       ← 백업본
 ├── README.md               ← GitHub 표시용
 └── CLAUDE.md               ← 이 파일
 ```
-> **총 코드량**: ~3,780줄
+> **총 코드량**: ~3,810줄
 > **manifest.json / sw.js**: PWA 홈화면 설치용 — 아직 미추가 (TODO)
 
 ### 탭 구성 (4개)
@@ -128,6 +128,7 @@
 | v2.2 | core.js APP_META appVersion '1.4' → '1.5' 버전 업 |
 | v2.3 | renderQueue smsPreview 미갱신 수정: 다음문자 시 이름 고정 버그 해결 (현재 대상 contact 기준으로 textarea 업데이트) |
 | v2.4 | 기본 수화물 필드 추가: 여행기본정보에 baggageKg 입력(숫자 전용, kg 자동 표시), 날씨안내 옆 같은 행 배치, 문자 템플릿 {기본수화물} 치환 지원 |
+| v2.5 | 관리탭 UI/기능 전면 개편: 해피콜 시스템 제거 → 폰저장(VCF) 시스템 신설(phoneSaveLogs 상태, saveContactToPhoneSingle, 저장완료 모달·개별삭제), 연락처 카드 버튼 재편(해피콜 tel: + 폰저장 VCF blob), KPI "연락처저장"→"폰저장" 카운팅, VCF FN sanitizeLine 적용, CSS .cc-btn-row/.cc-btn/.cc-btn-save 신규 추가 |
 
 ---
 

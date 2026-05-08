@@ -1986,9 +1986,10 @@ function exportGroupVcf(groupId){
   const rawDur = info.duration || '';
   const durMatch = rawDur.match(/(\d+)일/) || rawDur.match(/(\d+)$/);
   const fmtDur = durMatch ? `${durMatch[1]}일` : (rawDur || '');
+  const sanitizeLine = s => String(s).replace(/[\r\n]/g, ' ');
   const vcards = group.contacts.map(contact => {
-    const phone = contact.phone.replace(/-/g,'');
-    const fn = `${contact.name}${fmtDate}${info.destination || ''}${fmtDur}/${info.agency || ''}`;
+    const phone = contact.phone.replace(/[^0-9+]/g,'');
+    const fn = sanitizeLine(`${contact.name}${fmtDate}${info.destination || ''}${fmtDur}/${info.agency || ''}`);
     return `BEGIN:VCARD\nVERSION:3.0\nFN:${fn}\nTEL;TYPE=CELL:${phone}\nEND:VCARD`;
   }).join('\n');
   const blob = new Blob([vcards], {type:'text/vcard'});
@@ -2014,17 +2015,40 @@ function exportGroupVcf(groupId){
   renderManagePage();
 }
 
-function saveContactToPhone(contactId, groupId){
+function saveContactToPhoneSingle(contactId, groupId){
   const group = findGroup(groupId);
   const contact = group?.contacts.find(c => c.id === contactId);
   if(!contact){ showToast('연락처를 찾을 수 없습니다','error'); return; }
-  const phone = contact.phone.replace(/-/g,'');
+  const info = group.travelInfo || {};
+  const sanitizeLine = s => String(s).replace(/[\r\n]/g, ' ');
+  const phone = contact.phone.replace(/[^0-9+]/g,'');
+  const fn = sanitizeLine(`${contact.name}${info.depDate||''}${info.destination||''}${normalizeDuration(info.duration||'')}/${info.agency||''}`);
+  const vcard = `BEGIN:VCARD\nVERSION:3.0\nFN:${fn}\nTEL;TYPE=CELL:${phone}\nEND:VCARD`;
+  const blob = new Blob([vcard], {type:'text/vcard'});
+  const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = `intent://contacts/add?phone=${phone}&name=${encodeURIComponent(contact.name)}#Intent;scheme=content;package=com.android.contacts;end`;
+  a.href = url;
+  a.download = `${contact.name}.vcf`;
   a.style.display = 'none';
   document.body.appendChild(a); a.click();
-  setTimeout(()=>a.remove(), 200);
-  showToast(`${contact.name} 연락처 앱 열림`, 'success');
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 300);
+  state.phoneSaveLogs = {
+    ...state.phoneSaveLogs,
+    [groupId]: { ...(state.phoneSaveLogs[groupId] || {}), [contactId]: { saved: true, savedAt: todayIso() } }
+  };
+  saveState();
+  renderManagePage();
+  showToast(`${contact.name} 연락처 저장 중...`, 'success');
+}
+function latestPhoneSaveStatus(groupId, contactId){
+  return state.phoneSaveLogs[groupId]?.[contactId] || null;
+}
+function removePhoneSaveLog(groupId, contactId){
+  if(!state.phoneSaveLogs[groupId]) return;
+  const { [contactId]: _removed, ...rest } = state.phoneSaveLogs[groupId];
+  state.phoneSaveLogs = { ...state.phoneSaveLogs, [groupId]: rest };
+  saveState();
+  renderManagePage();
 }
 
 function openKakaoForContact(groupId, contactId){
@@ -2094,15 +2118,6 @@ function latestSendStatus(groupId, contactId){
 function isDuplicateSendRisk(groupId, contactId){
   return state.sendLogs.filter(x => x.groupId === groupId && x.contactId === contactId && x.status === 'success').length >= 2;
 }
-function latestHappyCallStatus(groupId, contactId){
-  const logs = state.happyCallLogs.filter(x => x.groupId === groupId && x.contactId === contactId).sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt));
-  return logs[0] || null;
-}
-function setHappyCall(groupId, contactId, done){
-  const group = findGroup(groupId); const contact = group?.contacts.find(c=>c.id===contactId); if(!group || !contact) return;
-  state.happyCallLogs.push({ id:uid('happy'), groupId, contactId, name:contact.name, phone:contact.phone, done, updatedAt:todayIso() });
-  saveState(); renderManagePage();
-}
 function deleteGroup(groupId){
   const g = findGroup(groupId);
   if(!g) return;
@@ -2111,7 +2126,7 @@ function deleteGroup(groupId){
   overlay.innerHTML = `
     <div style="background:#1e1e2e;border-radius:16px;padding:24px 20px;max-width:290px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.5)">
       <div style="font-size:15px;font-weight:800;color:var(--text1);margin-bottom:8px">"${escapeHtml(g.title)}"</div>
-      <div style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.5">그룹을 삭제하시겠습니까?<br>발송·해피콜 기록도 함께 삭제됩니다.</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.5">그룹을 삭제하시겠습니까?<br>발송·폰저장 기록도 함께 삭제됩니다.</div>
       <div style="display:flex;gap:8px">
         <button id="_dgCancel" style="flex:1;padding:11px;border-radius:10px;border:none;background:var(--surface3);color:var(--text2);font-size:14px;font-weight:700;cursor:pointer">취소</button>
         <button id="_dgConfirm" style="flex:1;padding:11px;border-radius:10px;border:none;background:#f87171;color:#fff;font-size:14px;font-weight:700;cursor:pointer">삭제</button>
@@ -2122,7 +2137,7 @@ function deleteGroup(groupId){
   overlay.querySelector('#_dgConfirm').addEventListener('click', ()=>{
     state.savedGroups = state.savedGroups.filter(x => x.id !== groupId);
     state.sendLogs = state.sendLogs.filter(l => l.groupId !== groupId);
-    state.happyCallLogs = state.happyCallLogs.filter(l => l.groupId !== groupId);
+    delete state.phoneSaveLogs[groupId];
     if(state.selectedGroupId === groupId) state.selectedGroupId = state.savedGroups[0]?.id || null;
     saveState(); renderManagePage(); renderSmsArea();
     overlay.remove();
@@ -2261,7 +2276,7 @@ function _bindGroupListDeleteBtns(overlay){
       cfm.innerHTML = `
         <div style="background:#1e1e2e;border-radius:16px;padding:24px 20px;max-width:290px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.5)">
           <div style="font-size:15px;font-weight:800;color:var(--text1);margin-bottom:8px">"${escapeHtml(g.title)}"</div>
-          <div style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.5">그룹을 삭제하시겠습니까?<br>발송·해피콜 기록도 함께 삭제됩니다.</div>
+          <div style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.5">그룹을 삭제하시겠습니까?<br>발송·폰저장 기록도 함께 삭제됩니다.</div>
           <div style="display:flex;gap:8px">
             <button id="_cfmCancel" style="flex:1;padding:11px;border-radius:10px;border:none;background:var(--surface3);color:var(--text2);font-size:14px;font-weight:700;cursor:pointer">취소</button>
             <button id="_cfmOk" style="flex:1;padding:11px;border-radius:10px;border:none;background:#f87171;color:#fff;font-size:14px;font-weight:700;cursor:pointer">삭제</button>
@@ -2272,7 +2287,7 @@ function _bindGroupListDeleteBtns(overlay){
       cfm.querySelector('#_cfmOk').addEventListener('click', ()=>{
         state.savedGroups = state.savedGroups.filter(x => x.id !== gid);
         state.sendLogs = state.sendLogs.filter(l => l.groupId !== gid);
-        state.happyCallLogs = state.happyCallLogs.filter(l => l.groupId !== gid);
+        delete state.phoneSaveLogs[gid];
         if(state.selectedGroupId === gid) state.selectedGroupId = state.savedGroups[0]?.id || null;
         saveState(); renderManagePage(); renderSmsArea();
         cfm.remove();
@@ -2331,85 +2346,53 @@ function showKpiDetail(type){
     if(!rows.length) rows = [{ name:'미발송 인원 없음', sub:'', badge:'' }];
   } else if(type === 'happy'){
     if(!group){ showToast('선택된 그룹이 없습니다','error'); return; }
-    const done = group.contacts.filter(c => latestHappyCallStatus(group.id, c.id)?.done);
-    const todo = group.contacts.filter(c => !latestHappyCallStatus(group.id, c.id)?.done);
     title = `해피콜 현황 — ${group.title}`;
-    rows = [
-      { name:`✅ 완료 ${done.length}명`, sub: done.map(c=>c.name).join(', ') || '-', badge:'' },
-      { name:`⏳ 미완료 ${todo.length}명`, sub: todo.map(c=>c.name).join(', ') || '-', badge:'' }
-    ];
+    rows = [{ name:'해피콜 기록 없음', sub:'카드에서 해피콜 버튼을 사용하세요', badge:'' }];
   } else if(type === 'vcf'){
-    // 연락처 저장: 그룹 목록 + 저장 버튼 + 이력을 전용 팝업으로 처리
-    window._deleteVcfLog = function(id) {
-      state.vcfLogs = state.vcfLogs.filter(function(l){ return l.id !== id; });
-      saveState();
-      var row = document.getElementById('_vcfLog_' + id);
-      if(row) row.remove();
-      if(!state.vcfLogs.length){
-        var c = document.getElementById('_vcfHistContainer');
-        if(c) c.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:8px 0">이력 없음</div>';
-      }
-    };
-    window._clearAllVcfLogs = function() {
-      var cfm = document.createElement('div');
-      cfm.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10001;display:flex;align-items:center;justify-content:center';
-      cfm.innerHTML = '<div style="background:#1e1e2e;border-radius:16px;padding:24px 20px;width:80%;max-width:300px;text-align:center">'
-        + '<div style="font-size:15px;font-weight:700;color:var(--text1);margin-bottom:8px">저장 이력 전체 삭제</div>'
-        + '<div style="font-size:13px;color:var(--text2);margin-bottom:20px">저장 이력을 모두 삭제할까요?</div>'
-        + '<div style="display:flex;gap:10px">'
-        + '<button id="_cfmCancelBtn" style="flex:1;padding:10px;border-radius:10px;border:none;background:rgba(255,255,255,.1);color:var(--text2);font-size:14px;font-weight:700;cursor:pointer">취소</button>'
-        + '<button id="_cfmDelAllBtn" style="flex:1;padding:10px;border-radius:10px;border:none;background:rgba(248,113,113,.3);color:#f87171;font-size:14px;font-weight:700;cursor:pointer">삭제</button>'
-        + '</div></div>';
-      cfm.querySelector('#_cfmCancelBtn').onclick = function(){ cfm.remove(); };
-      cfm.querySelector('#_cfmDelAllBtn').onclick = function() {
-        state.vcfLogs = [];
-        saveState();
-        cfm.remove();
-        var c = document.getElementById('_vcfHistContainer');
-        if(c){ c.innerHTML = ''; c.previousElementSibling && c.previousElementSibling.remove(); }
-      };
-      document.body.appendChild(cfm);
-    };
-    const logs = Array.isArray(state.vcfLogs) ? [...state.vcfLogs].reverse() : [];
-    const vcfGroups = state.savedGroups.filter(g => Array.isArray(g.contacts) && g.contacts.length > 0);
-    const groupListHtml = vcfGroups.length ? vcfGroups.map(g => {
-      const lastLog = logs.find(l => l.groupId === g.id);
-      const lastStr = lastLog ? (() => { const d = new Date(lastLog.savedAt); return isNaN(d) ? lastLog.savedAt : `최근 ${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; })() : '저장 이력 없음';
-      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07)">
-        <div style="flex:1;min-width:0">
-          <div style="font-size:14px;font-weight:700;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(g.title||'그룹')}</div>
-          <div style="font-size:12px;color:var(--text2);margin-top:2px">${g.contacts.length}명 · ${escapeHtml(lastStr)}</div>
-        </div>
-        <button onclick="exportGroupVcf('${g.id}')" style="flex-shrink:0;padding:6px 14px;border-radius:10px;border:none;background:rgba(52,211,153,.2);color:#34d399;font-size:12px;font-weight:700;cursor:pointer">저장</button>
-        <button onclick="document.getElementById('_vcfOverlay')?.remove();deleteGroup('${g.id}')" style="flex-shrink:0;padding:6px 14px;border-radius:10px;border:none;background:rgba(248,113,113,.15);color:#f87171;font-size:12px;font-weight:700;cursor:pointer">삭제</button>
-      </div>`;
-    }).join('') : '<div style="padding:16px 0;color:var(--text2);font-size:13px">저장된 그룹이 없습니다.</div>';
-    const histHtml = logs.length ? logs.slice(0,10).map(l => {
-      const d = new Date(l.savedAt);
-      const dateStr = isNaN(d) ? l.savedAt : `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-      return `<div id="_vcfLog_${l.id}" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)">
-        <div style="flex:1;min-width:0;font-size:13px;color:var(--text2)">${escapeHtml(l.groupTitle||'그룹')} · ${l.count}명</div>
-        <span style="font-size:11px;color:var(--muted);margin-right:4px">${dateStr}</span>
-        <button onclick="window._deleteVcfLog('${l.id}')" style="flex-shrink:0;padding:3px 9px;border-radius:7px;border:none;background:rgba(248,113,113,.15);color:#f87171;font-size:11px;font-weight:700;cursor:pointer">삭제</button>
-      </div>`;
-    }).join('') : '<div style="font-size:12px;color:var(--muted);padding:8px 0">이력 없음</div>';
+    if(!group){ showToast('선택된 그룹이 없습니다','error'); return; }
+    document.getElementById('_vcfOverlay')?.remove();
+    const savedContacts  = group.contacts.filter(c => latestPhoneSaveStatus(group.id, c.id));
+    const unsavedContacts = group.contacts.filter(c => !latestPhoneSaveStatus(group.id, c.id));
+
+    const savedHtml = savedContacts.length
+      ? savedContacts.map(c => {
+          const rec = latestPhoneSaveStatus(group.id, c.id);
+          const d = new Date(rec.savedAt);
+          const dateStr = isNaN(d) ? rec.savedAt : `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+          return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07)">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:14px;font-weight:700;color:var(--text)">${escapeHtml(c.name)}</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px">${dateStr}</div>
+            </div>
+            <button onclick="removePhoneSaveLog('${group.id}','${c.id}');showKpiDetail('vcf')" style="flex-shrink:0;padding:5px 12px;border-radius:9px;border:none;background:rgba(248,113,113,.15);color:#f87171;font-size:12px;font-weight:700;cursor:pointer">삭제</button>
+          </div>`;
+        }).join('')
+      : '<div style="padding:12px 0;font-size:13px;color:var(--muted)">저장 완료 인원 없음</div>';
+
+    const unsavedHtml = unsavedContacts.length
+      ? unsavedContacts.map(c =>
+          `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07)">
+            <div style="flex:1;font-size:14px;font-weight:700;color:var(--text)">${escapeHtml(c.name)}</div>
+            <span style="font-size:12px;color:var(--muted);font-family:monospace">${escapeHtml(c.phone)}</span>
+            <button onclick="saveContactToPhoneSingle('${c.id}','${group.id}');showKpiDetail('vcf')" style="flex-shrink:0;padding:5px 12px;border-radius:9px;border:none;background:rgba(52,211,153,.2);color:#34d399;font-size:12px;font-weight:700;cursor:pointer">저장</button>
+          </div>`).join('')
+      : '<div style="padding:12px 0;font-size:13px;color:var(--muted)">미저장 인원 없음</div>';
+
     const vcfOverlay = document.createElement('div');
     vcfOverlay.id = '_vcfOverlay';
     vcfOverlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
     vcfOverlay.innerHTML = `
       <div style="background:#1e1e2e;border-radius:20px 20px 0 0;padding:20px 18px 32px;width:100%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 -4px 32px rgba(0,0,0,.4)">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-shrink:0">
-          <span style="font-size:15px;font-weight:800;color:var(--text1)">연락처 저장</span>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-shrink:0">
+          <span style="font-size:15px;font-weight:800;color:var(--text)">폰저장 현황</span>
           <button onclick="this.closest('div[style*=fixed]').remove()" style="background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer;line-height:1">✕</button>
         </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px;flex-shrink:0">${escapeHtml(group.title)} · ${savedContacts.length}/${group.contacts.length}명 저장</div>
         <div style="overflow-y:auto;flex:1">
-          <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:6px;letter-spacing:.5px">그룹 선택 후 저장</div>
-          ${groupListHtml}
-          ${logs.length ? `<div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 6px">
-            <span style="font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.5px">저장 이력 (최근 10건)</span>
-            <button onclick="window._clearAllVcfLogs()" style="padding:3px 10px;border-radius:7px;border:none;background:rgba(248,113,113,.15);color:#f87171;font-size:11px;font-weight:700;cursor:pointer">전체 삭제</button>
-          </div>
-          <div id="_vcfHistContainer">${histHtml}</div>` : '<div id="_vcfHistContainer"></div>'}
+          <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:4px;letter-spacing:.5px">저장 완료 (${savedContacts.length}명)</div>
+          ${savedHtml}
+          <div style="font-size:11px;font-weight:800;color:var(--muted);margin:14px 0 4px;letter-spacing:.5px">미저장 (${unsavedContacts.length}명)</div>
+          ${unsavedHtml}
         </div>
       </div>`;
     vcfOverlay.addEventListener('click', e => { if(e.target === vcfOverlay) vcfOverlay.remove(); });
@@ -2442,23 +2425,18 @@ function showKpiDetail(type){
 
 function getGroupStats(groupId){
   const group = state.savedGroups.find(g => g.id === groupId);
-  if(!group) return {total:0, success:0, pending:0, fail:0, happyDone:0, happyTodo:0};
+  if(!group) return {total:0, success:0, pending:0, fail:0, phoneSaved:0};
   const total = group.contacts.length;
-  let success=0, pending=0, fail=0;
+  let success=0, pending=0, fail=0, phoneSaved=0;
   group.contacts.forEach(c=>{
     const log = latestSendStatus(group.id, c.id);
     if(!log) pending++;
     else if(log.status === 'success') success++;
     else if(log.status === 'fail') fail++;
     else pending++;
+    if(latestPhoneSaveStatus(group.id, c.id)) phoneSaved++;
   });
-  let happyDone=0, happyTodo=0;
-  group.contacts.forEach(c=>{
-    const call = latestHappyCallStatus(group.id, c.id);
-    if(call?.done) happyDone++;
-    else happyTodo++;
-  });
-  return {total, success, pending, fail, happyDone, happyTodo};
+  return {total, success, pending, fail, phoneSaved};
 }
 
 function renderManagePage(){
@@ -2471,8 +2449,8 @@ function renderManagePage(){
   const _kpiStats = getGroupStats(_kpiTargetId);
   document.getElementById('kpiSuccess').textContent = _kpiStats.success;
   document.getElementById('kpiPending').textContent = _kpiStats.pending;
-  document.getElementById('kpiHappy').textContent = _kpiStats.happyDone;
-  document.getElementById('kpiVcf').textContent = Array.isArray(state.vcfLogs) ? state.vcfLogs.length : 0;
+  document.getElementById('kpiHappy').textContent = 0;
+  document.getElementById('kpiVcf').textContent = _kpiStats.phoneSaved;
 
   const groups = state.savedGroups.filter(group => {
     const hay = `${group.title} ${group.travelInfo.agency || ''} ${group.contacts.map(c=>`${c.name} ${c.phone}`).join(' ')}`.toLowerCase();
@@ -2491,7 +2469,7 @@ function renderManagePage(){
         <div class="group-head">
           <div style="flex:1;min-width:0">
             <div class="group-title">${escapeHtml(group.title)} ${selected ? '<span class="chip blue">현재 발송 그룹</span>' : ''}</div>
-            <div class="group-sub">${escapeHtml(group.travelInfo.depDate || '-')} / ${escapeHtml(group.travelInfo.destination || '-')} / ${escapeHtml(group.travelInfo.duration || '-')} / ${escapeHtml(group.travelInfo.agency || '-')} · ${group.contacts.length}명<br>문자 ${gStats.success}/${gStats.total} · 해피콜 ${gStats.happyDone}/${gStats.total}</div>
+            <div class="group-sub">${escapeHtml(group.travelInfo.depDate || '-')} / ${escapeHtml(group.travelInfo.destination || '-')} / ${escapeHtml(group.travelInfo.duration || '-')} / ${escapeHtml(group.travelInfo.agency || '-')} · ${group.contacts.length}명<br>문자 ${gStats.success}/${gStats.total} · 폰저장 ${gStats.phoneSaved}/${gStats.total}</div>
           </div>
           <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
             <button class="mini-btn" onclick="enterSelDeleteMode('${group.id}')">선택삭제</button>
@@ -2502,19 +2480,23 @@ function renderManagePage(){
         ${duplicateRisk ? `<div class="warn-box" style="margin-bottom:8px">중복 번호 ${duplicateRisk}건이 그룹 내부에 있습니다. 발송 전 다시 확인해 주세요.</div>` : ''}
         <div class="contact-card-grid">
         ${group.contacts.map(contact => {
-          const send  = latestSendStatus(group.id, contact.id);
-          const happy = latestHappyCallStatus(group.id, contact.id);
+          const send    = latestSendStatus(group.id, contact.id);
+          const phoneSave = latestPhoneSaveStatus(group.id, contact.id);
           const sentOk  = send?.status === 'success';
           const sentFail= send?.status === 'fail';
           const dupRisk = isDuplicateSendRisk(group.id, contact.id);
           const cardCls = dupRisk ? 'card-dup' : sentOk ? 'card-sent' : sentFail ? 'card-fail' : '';
-          const sendBadge  = send ? (sentOk ? '<span class="chip green">발송✓</span>' : sentFail ? '<span class="chip red">실패</span>' : '<span class="chip warn">미발송</span>') : '<span class="chip">기록없음</span>';
-          const happyBadge = happy?.done ? '<span class="chip green">해피✓</span>' : '<span class="chip warn">해피미완</span>';
-          const dupBadge   = dupRisk ? '<span class="chip red">중복경고</span>' : '';
+          const sendBadge = send ? (sentOk ? '<span class="chip green">발송✓</span>' : sentFail ? '<span class="chip red">실패</span>' : '<span class="chip warn">미발송</span>') : '<span class="chip">기록없음</span>';
+          const saveBadge = phoneSave ? '<span class="chip green">저장✓</span>' : '';
+          const dupBadge  = dupRisk ? '<span class="chip red">중복경고</span>' : '';
           return `<div class="contact-card ${cardCls}" onclick="openDetailModal('${group.id}','${contact.id}')">
             <div class="cc-name">${escapeHtml(contact.name)}</div>
             <div class="cc-phone">${escapeHtml(contact.phone)}</div>
-            <div class="cc-badges">${sendBadge}${happyBadge}${dupBadge}</div>
+            <div class="cc-badges">${sendBadge}${saveBadge}${dupBadge}</div>
+            <div class="cc-btn-row">
+              <a class="cc-btn" href="tel:${contact.phone}" onclick="event.stopPropagation()">해피콜</a>
+              <button class="cc-btn cc-btn-save" onclick="event.stopPropagation();saveContactToPhoneSingle('${contact.id}','${group.id}')">폰저장</button>
+            </div>
           </div>`;
         }).join('')}
         </div>
@@ -2528,13 +2510,13 @@ function openDetailModal(groupId, contactId){
   const contact = group?.contacts.find(c => c.id === contactId);
   if(!group || !contact) return;
 
-  const send  = latestSendStatus(groupId, contactId);
-  const happy = latestHappyCallStatus(groupId, contactId);
-  const dupRisk = isDuplicateSendRisk(groupId, contactId);
+  const send      = latestSendStatus(groupId, contactId);
+  const phoneSave = latestPhoneSaveStatus(groupId, contactId);
+  const dupRisk   = isDuplicateSendRisk(groupId, contactId);
 
-  const sendLabel  = send ? ({'success':'발송 성공 ✓','fail':'발송 실패','pending':'미발송'}[send.status] || '-') : '기록 없음';
-  const happyLabel = happy ? (happy.done ? '완료 ✓' : '미완료') : '기록 없음';
-  const sentAt     = send?.sentAt ? new Date(send.sentAt).toLocaleString('ko-KR') : '-';
+  const sendLabel   = send ? ({'success':'발송 성공 ✓','fail':'발송 실패','pending':'미발송'}[send.status] || '-') : '기록 없음';
+  const sentAt      = send?.sentAt ? new Date(send.sentAt).toLocaleString('ko-KR') : '-';
+  const saveLabel   = phoneSave ? new Date(phoneSave.savedAt).toLocaleString('ko-KR') : '미저장';
 
   document.getElementById('detailModalName').textContent = contact.name;
 
@@ -2546,18 +2528,15 @@ function openDetailModal(groupId, contactId){
     <div class="modal-row"><span class="modal-label">여행지</span><span class="modal-value">${escapeHtml(group.travelInfo.destination || '-')} · ${escapeHtml(group.travelInfo.duration || '-')}</span></div>
     <div class="modal-row"><span class="modal-label">문자 발송</span><span class="modal-value">${sendLabel}</span></div>
     <div class="modal-row"><span class="modal-label">발송 시각</span><span class="modal-value">${sentAt}</span></div>
-    <div class="modal-row"><span class="modal-label">해피콜</span><span class="modal-value">${happyLabel}</span></div>
+    <div class="modal-row"><span class="modal-label">폰저장</span><span class="modal-value" style="color:${phoneSave ? 'var(--accent2)' : 'var(--muted)'}">${saveLabel}</span></div>
     ${dupRisk ? '<div class="modal-row"><span class="modal-label" style="color:var(--danger)">⚠️ 중복 발송 경고</span><span class="modal-value" style="color:var(--danger)">2회 이상 발송</span></div>' : ''}
     ${contact.note ? `<div class="modal-row"><span class="modal-label">메모</span><span class="modal-value">${escapeHtml(contact.note)}</span></div>` : ''}
   `;
 
-  document.getElementById('detailModalActions').innerHTML = `
-    <a class="btn btn-success" href="tel:${contact.phone}" style="flex:1;text-decoration:none;text-align:center">해피콜전화</a>
-    <button class="btn btn-success" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px" onclick="setHappyCall('${groupId}','${contactId}',true);closeDetailModal()">
-      <span style="display:inline-block;width:20px;height:20px;border-radius:5px;border:2px solid #fff;background:${happy?.done ? '#4ade80' : 'transparent'};line-height:16px;text-align:center;font-size:14px">${happy?.done ? '✓' : ''}</span>
-    </button>
-    <button class="btn btn-ghost"   style="flex:1" onclick="setHappyCall('${groupId}','${contactId}',false);closeDetailModal()">해피콜 보류</button>
-  `;
+  document.getElementById('detailModalActions').innerHTML = phoneSave
+    ? `<button class="btn btn-ghost" style="flex:1" onclick="removePhoneSaveLog('${groupId}','${contactId}');closeDetailModal()">저장기록 삭제</button>
+       <button class="btn btn-ghost" style="flex:1" onclick="saveContactToPhoneSingle('${contactId}','${groupId}')">다시 저장</button>`
+    : `<button class="btn btn-success" style="flex:1" onclick="saveContactToPhoneSingle('${contactId}','${groupId}');closeDetailModal()">폰저장</button>`;
 
   document.getElementById('contactDetailModal').classList.add('show');
 }

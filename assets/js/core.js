@@ -45,7 +45,7 @@ function createInitialState(){
     savedGroups: [],
     sendLogs: [],
     vcfLogs: [],
-    happyCallLogs: [],
+    phoneSaveLogs: {},
     guideProfile: { name:'', phone:'' },
     selectedGroupId: null
   };
@@ -100,7 +100,7 @@ function migrateState(parsed){
   next.savedGroups = Array.isArray(parsed.savedGroups) ? parsed.savedGroups : [];
   next.sendLogs = Array.isArray(parsed.sendLogs) ? parsed.sendLogs : [];
   next.vcfLogs = Array.isArray(parsed.vcfLogs) ? parsed.vcfLogs : [];
-  next.happyCallLogs = Array.isArray(parsed.happyCallLogs) ? parsed.happyCallLogs : [];
+  next.phoneSaveLogs = deepClone(parsed.phoneSaveLogs && typeof parsed.phoneSaveLogs === 'object' ? parsed.phoneSaveLogs : {});
   next.guideProfile = {...base.guideProfile, ...(parsed.guideProfile||{})};
   next.selectedGroupId = parsed.selectedGroupId || null;
   next.appMeta.schemaVersion = APP_META.schemaVersion;
