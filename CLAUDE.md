@@ -192,7 +192,7 @@ git add . && git commit -m "feat: ..." && git push
 - 저장소: `github.com/langbowoo/JGSAS`
 - 배포 URL: `https://langbowoo.github.io/JGSAS/`
 - 브랜치: main
-- git 설정: username `수고38` / email `jungil6633@gmail.com`
+- git 설정: username `langbowoo` / email `jungil6633@gmail.com`
 
 ---
 
