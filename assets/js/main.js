@@ -2052,6 +2052,21 @@ function saveContactToPhoneSingle(contactId, groupId){
 function latestPhoneSaveStatus(groupId, contactId){
   return state.phoneSaveLogs[groupId]?.[contactId] || null;
 }
+function latestHappyCallStatus(groupId, contactId){
+  return state.happyCallLogs?.[groupId]?.[contactId] || null;
+}
+function doHappyCall(contactId, groupId){
+  const group = findGroup(groupId);
+  const contact = group?.contacts.find(c => c.id === contactId);
+  if(!contact){ showToast('연락처를 찾을 수 없습니다','error'); return; }
+  state.happyCallLogs = {
+    ...state.happyCallLogs,
+    [groupId]: { ...(state.happyCallLogs[groupId] || {}), [contactId]: { called: true, calledAt: todayIso() } }
+  };
+  saveState();
+  renderManagePage();
+  window.location.href = `tel:${contact.phone}`;
+}
 function removePhoneSaveLog(groupId, contactId){
   if(!state.phoneSaveLogs[groupId]) return;
   const { [contactId]: _removed, ...rest } = state.phoneSaveLogs[groupId];
@@ -2147,6 +2162,7 @@ function deleteGroup(groupId){
     state.savedGroups = state.savedGroups.filter(x => x.id !== groupId);
     state.sendLogs = state.sendLogs.filter(l => l.groupId !== groupId);
     delete state.phoneSaveLogs[groupId];
+    delete state.happyCallLogs[groupId];
     if(state.selectedGroupId === groupId) state.selectedGroupId = state.savedGroups[0]?.id || null;
     saveState(); renderManagePage(); renderSmsArea();
     overlay.remove();
@@ -2297,6 +2313,7 @@ function _bindGroupListDeleteBtns(overlay){
         state.savedGroups = state.savedGroups.filter(x => x.id !== gid);
         state.sendLogs = state.sendLogs.filter(l => l.groupId !== gid);
         delete state.phoneSaveLogs[gid];
+        delete state.happyCallLogs[gid];
         if(state.selectedGroupId === gid) state.selectedGroupId = state.savedGroups[0]?.id || null;
         saveState(); renderManagePage(); renderSmsArea();
         cfm.remove();
@@ -2489,22 +2506,22 @@ function renderManagePage(){
         ${duplicateRisk ? `<div class="warn-box" style="margin-bottom:8px">중복 번호 ${duplicateRisk}건이 그룹 내부에 있습니다. 발송 전 다시 확인해 주세요.</div>` : ''}
         <div class="contact-card-grid">
         ${group.contacts.map(contact => {
-          const send    = latestSendStatus(group.id, contact.id);
+          const send      = latestSendStatus(group.id, contact.id);
           const phoneSave = latestPhoneSaveStatus(group.id, contact.id);
+          const happyCall = latestHappyCallStatus(group.id, contact.id);
           const sentOk  = send?.status === 'success';
           const sentFail= send?.status === 'fail';
           const dupRisk = isDuplicateSendRisk(group.id, contact.id);
           const cardCls = dupRisk ? 'card-dup' : sentOk ? 'card-sent' : sentFail ? 'card-fail' : '';
           const sendBadge = send ? (sentOk ? '<span class="chip green">발송✓</span>' : sentFail ? '<span class="chip red">실패</span>' : '<span class="chip warn">미발송</span>') : '<span class="chip">기록없음</span>';
-          const saveBadge = phoneSave ? '<span class="chip green">저장✓</span>' : '';
           const dupBadge  = dupRisk ? '<span class="chip red">중복경고</span>' : '';
           return `<div class="contact-card ${cardCls}" onclick="openDetailModal('${group.id}','${contact.id}')">
             <div class="cc-name">${escapeHtml(contact.name)}</div>
             <div class="cc-phone">${escapeHtml(contact.phone)}</div>
-            <div class="cc-badges">${sendBadge}${saveBadge}${dupBadge}</div>
+            <div class="cc-badges">${sendBadge}${dupBadge}</div>
             <div class="cc-btn-row">
-              <a class="cc-btn" href="tel:${contact.phone}" onclick="event.stopPropagation()">해피콜</a>
-              <button class="cc-btn cc-btn-save" onclick="event.stopPropagation();saveContactToPhoneSingle('${contact.id}','${group.id}')">폰저장</button>
+              <button class="cc-btn cc-btn-save${happyCall ? ' cc-btn-done' : ''}" onclick="event.stopPropagation();doHappyCall('${contact.id}','${group.id}')">해피콜</button>
+              <button class="cc-btn cc-btn-save${phoneSave ? ' cc-btn-done' : ''}" onclick="event.stopPropagation();saveContactToPhoneSingle('${contact.id}','${group.id}')">폰저장</button>
             </div>
           </div>`;
         }).join('')}
