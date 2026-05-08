@@ -99,6 +99,10 @@ git add . && git commit -m "feat: ..." && git push
 | 대형 기능 | planner → 작업 → code-reviewer → verify-agent → doc-updater |
 | 라이브러리 교체 | planner 필수 |
 
+**doc-updater 필수 동작**: 버전 업 시 아래 두 곳을 반드시 동시에 수정한다.
+1. `CLAUDE.md` 상단 `버전: vX.Y`
+2. `assets/js/core.js` `APP_META.appVersion: 'X.Y'`
+
 ---
 
 ## 버전 히스토리 (최근 3개)
