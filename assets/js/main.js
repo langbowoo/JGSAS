@@ -138,6 +138,11 @@ function switchTab(name, fromHistory){
 }
 
 function normalizeDuration(v){ if(!v) return ''; return /^\d+$/.test(v) ? `${v}일` : v; }
+function formatDepDateKorean(dateStr){
+  const m = String(dateStr || '').trim().match(/^(\d{1,2})[.\/-](\d{1,2})$/);
+  if(!m) return dateStr || '';
+  return `${parseInt(m[1],10)}월${parseInt(m[2],10)}일`;
+}
 function depDayOfWeek(dateStr){
   const m = String(dateStr || '').trim().match(/^(\d{1,2})[.\/-](\d{1,2})$/);
   if(!m) return '';
@@ -1791,7 +1796,7 @@ function resolveTags(raw, context={}){
 
   const rep = {
     '{이름}': firstName,
-    '{출발일}': info.depDate || '{출발일}',
+    '{출발일}': formatDepDateKorean(info.depDate) || '{출발일}',
     '{출발일요일}': depDayOfWeek(info.depDate) || '{출발일요일}',
     '{여행지}': info.destination || '{여행지}',
     '{기간}': normalizeDuration(info.duration) || '{기간}',
