@@ -875,18 +875,18 @@ function extractTravelInfo(rawText){
     }
     // 항공편 출국 추출
     if(!result.flightOut){
-      const m = line.match(/(?:출국편|출국항공|출발편|항공편)[:\s　]*([A-Z]{2}\s*\d{3,4}[A-Z]?)/i);
+      const m = line.match(/(?:출국편|출국항공|출발편|항공편)[:\s　]*([A-Z0-9]{2}\s*\d{3,4}[A-Z]?)/i);
       if(m) result.flightOut = m[1].replace(/\s/g,'').toUpperCase();
     }
     if(!result.flightOut){
       // BUG-08 FIX: | 분기 우측 대안 매칭 시 m[1]이 undefined → TypeError 방어
       // 한국/인천 출발 괄호 표기를 단일 패턴으로 통합
-      const m = line.match(/([A-Z]{2}\d{3,4})\s*[\(（][^)]*(?:한국|인천)\s*출발/i);
+      const m = line.match(/([A-Z0-9]{2}\d{3,4})\s*[\(（][^)]*(?:한국|인천)\s*출발/i);
       if(m && m[1]) result.flightOut = m[1].toUpperCase();
     }
     // 귀국편 추출
     if(!result.flightIn){
-      const m = line.match(/(?:귀국편|귀국항공|귀국)[:\s　]*([A-Z]{2}\s*\d{3,4}[A-Z]?)/i);
+      const m = line.match(/(?:귀국편|귀국항공|귀국)[:\s　]*([A-Z0-9]{2}\s*\d{3,4}[A-Z]?)/i);
       if(m) result.flightIn = m[1].replace(/\s/g,'').toUpperCase();
     }
     // 미팅시간 추출
