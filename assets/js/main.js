@@ -292,8 +292,8 @@ function extractContactsFromText(rawText, source='text'){
     return { line, offset };
   });
   lineOffsets.forEach(({ line, offset }) => {
-    // [FIX] 쓰루가이드/스루가이드 포함 행은 명단 추출 제외 (가이드 번호 오염 방지)
-    const GUIDE_SKIP_KEYWORDS = ['쓰루가이드','스루가이드','through guide','through-guide','가이드 정보','가    이    드','t/g','tg'];
+    // [FIX] 가이드 관련 행은 명단 추출 제외 (가이드 번호 오염 방지)
+    const GUIDE_SKIP_KEYWORDS = ['가이드','쓰루가이드','스루가이드','through guide','through-guide','가이드 정보','가    이    드','t/g','tg'];
     if(GUIDE_SKIP_KEYWORDS.some(kw => line.toLowerCase().includes(kw))) return;
     if(line && findPhonesInText(line).length){
       consumePhoneOccurrence(line, text, offset);
@@ -306,7 +306,7 @@ function extractContactsFromText(rawText, source='text'){
       const afterText = text.slice(p.index + p.raw.length, p.index + p.raw.length + 20);
       // [FIX] 가이드 번호 fallback 경로 유입 방지 — 앞뒤 컨텍스트에 가이드 키워드 포함 시 제외
       const context = beforeText + afterText;
-      if(['쓰루가이드','스루가이드','through guide'].some(kw => context.toLowerCase().includes(kw))) return;
+      if(['가이드','쓰루가이드','스루가이드','through guide'].some(kw => context.toLowerCase().includes(kw))) return;
       const picked = extractBestName(beforeText, afterText);
       if(!map.has(p.normalized)){
         map.set(p.normalized, {
@@ -341,7 +341,7 @@ async function parseExcelFile(file){
 
   // ── 1단계: 컬럼 구조 기반 추출 시도 (가이드명단 시트 전용) ──────────────
   // '핸드폰번호' 또는 '연락처' 헤더가 있는 시트를 구조형으로 처리
-  const PHONE_HEADERS = ['핸드폰번호','핸드폰','연락처','전화번호','휴대폰','mobile','phone'];
+  const PHONE_HEADERS = ['핸드폰번호','핸드폰','연락처','전화번호','휴대폰','휴대폰번호','휴대폰 번호','핸드폰 번호','mobile','phone'];
   const NAME_HEADERS  = ['한글명','한글이름','이름','성명','name','고객명','탑승객'];
 
   for(const sheetName of wb.SheetNames){
