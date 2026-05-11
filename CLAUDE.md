@@ -1,6 +1,6 @@
 # CLAUDE.md — JGSAS
 
-> 마지막 업데이트: 2026-05-08 | 버전: v2.7
+> 마지막 업데이트: 2026-05-11 | 버전: v2.8
 
 ---
 
@@ -109,7 +109,6 @@ git add . && git commit -m "feat: ..." && git push
 
 | 버전 | 주요 변경 |
 |------|-----------|
-| v2.4 | 기본수화물 필드 추가, `{기본수화물}` 태그 치환 지원 |
-| v2.5 | 관리탭 전면 개편: 해피콜 제거 → 폰저장(VCF) 시스템 신설, 연락처 카드 버튼 재편 |
 | v2.6 | 발송 큐 카운터·완료 목록 버그 수정 (doneCount/totalCount/sentListHtml 누적 기준 전환) |
 | v2.7 | 관리탭 연락처 카드 버튼 UI 개편: 저장✓ 배지 제거, 해피콜 버튼 초록 스타일 통일, 해피콜 클릭 시 state.happyCallLogs 저장(그룹별·인원별) + tel: 전화, 완료 시 두 버튼 모두 .cc-btn-done 비활성 스타일, 그룹 삭제 시 happyCallLogs 정리 |
+| v2.8 | 출발일 포맷 "5월14일(목)" 형식 통일(formatDepDateKorean 신설), 가이드 번호 오추출 방지 강화(GUIDE_SKIP_KEYWORDS·STOPWORDS 확장), 항공편 정규식 숫자+문자 혼합 코드 인식([A-Z0-9]{2}), PHONE_HEADERS 확장, autofillTravelForm·parseExcelFile 버그 수정 |

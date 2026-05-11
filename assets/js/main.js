@@ -350,6 +350,22 @@ async function parseExcelFile(file){
   // '핸드폰번호' 또는 '연락처' 헤더가 있는 시트를 구조형으로 처리
   const PHONE_HEADERS = ['핸드폰번호','핸드폰','연락처','전화번호','휴대폰','휴대폰번호','휴대폰 번호','핸드폰 번호','mobile','phone'];
   const NAME_HEADERS  = ['한글명','한글이름','이름','성명','name','고객명','탑승객'];
+  const EXCEL_GUIDE_KEYWORDS = ['가이드','t/g','tg','쓰루가이드','스루가이드'];
+
+  // 사전 패스: 명단 시트에서 가이드 번호를 먼저 수집 — 시트 간 재등장 차단
+  const SKIP_SHEET_KEYS = ['확정서','일정표','schedule','itinerary'];
+  const guidePhones = new Set();
+  for(const sheetName of wb.SheetNames){
+    if(SKIP_SHEET_KEYS.some(k => sheetName.toLowerCase().includes(k))) continue;
+    const ws = wb.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(ws, { header:1, defval:'', raw:false });
+    rows.forEach(row => {
+      const rowText = row.map(v => cellStr(v)).join(' ').toLowerCase();
+      if(EXCEL_GUIDE_KEYWORDS.some(kw => rowText.includes(kw))){
+        row.forEach(v => { const p = normalizePhone(cellStr(v)); if(p) guidePhones.add(p); });
+      }
+    });
+  }
 
   for(const sheetName of wb.SheetNames){
     // '확정서' 등 일정표 시트는 건너뜀 — 가이드 번호 오염 방지
@@ -369,9 +385,7 @@ async function parseExcelFile(file){
     if(phoneCol < 0) continue; // 이 시트는 구조형 아님 → 건너뜀
 
     // 헤더 다음 행부터 데이터 추출
-    const EXCEL_GUIDE_KEYWORDS = ['가이드','t/g','tg','쓰루가이드','스루가이드'];
     const NAME_PHONE_LABELS = new Set(['한국','일본','국내','해외','현지','korea','japan']);
-    const guidePhones = new Set(); // 가이드 행 전화번호 — 시트 내 재등장 방지
     const map = new Map();
     for(let r = headerRow + 1; r < rows.length; r++){
       const row = rows[r];
@@ -1153,15 +1167,18 @@ function autofillTravelForm(info){
       skipped.push(id);
     }
   });
-  // state 동기화
-  normalizeTravelInfoFromForm();
-  // depDate 필드 표시 포맷: "M.D" → "M월D일(요일)"
-  const depEl = document.getElementById('depDate');
-  if(depEl && depEl.value){
-    const kor = formatDepDateKorean(depEl.value);
-    const dow = depDayOfWeek(depEl.value);
-    depEl.value = dow ? `${kor}(${dow})` : kor;
+  // depDate가 이번에 채워진 경우에만 포맷 변환 ("M.D" → "M월D일(요일)")
+  // state 동기화보다 먼저 실행해야 normalizeTravelInfoFromForm이 올바른 값을 읽음
+  if(filled.includes('depDate')){
+    const depEl = document.getElementById('depDate');
+    if(depEl && depEl.value){
+      const kor = formatDepDateKorean(depEl.value);
+      const dow = depDayOfWeek(depEl.value);
+      depEl.value = dow ? `${kor}(${dow})` : kor;
+    }
   }
+  // state 동기화 — buildGroupPreview 내 재호출 포함하여 포맷 변환 후 일관된 상태 유지
+  normalizeTravelInfoFromForm();
   buildGroupPreview();
   return { filled, skipped };
 }
