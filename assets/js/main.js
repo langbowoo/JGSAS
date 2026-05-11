@@ -363,20 +363,25 @@ async function parseExcelFile(file){
 
     // 헤더 다음 행부터 데이터 추출
     const EXCEL_GUIDE_KEYWORDS = ['가이드','t/g','tg','쓰루가이드','스루가이드'];
+    const NAME_PHONE_LABELS = new Set(['한국','일본','국내','해외','현지','korea','japan']);
+    const guidePhones = new Set(); // 가이드 행 전화번호 — 시트 내 재등장 방지
     const map = new Map();
     for(let r = headerRow + 1; r < rows.length; r++){
       const row = rows[r];
       const rawPhone = cellStr(row[phoneCol]).trim();
       const rawName  = nameCol >= 0 ? cellStr(row[nameCol]).trim() : '';
 
-      // 이름 또는 행 내 셀에 가이드 키워드 포함 시 해당 행 건너뜀
+      // 이름 또는 행 내 셀에 가이드 키워드 포함 시 해당 행 건너뜀 + 번호 기록
       const rowTextLower = row.map(v => cellStr(v)).join(' ').toLowerCase();
-      if(EXCEL_GUIDE_KEYWORDS.some(kw => rowTextLower.includes(kw))) continue;
-      // 이름 컬럼이 국가/방향 레이블(한국, 일본 등)인 경우 가이드 연락처 행으로 간주하여 건너뜀
-      const NAME_PHONE_LABELS = new Set(['한국','일본','국내','해외','현지','korea','japan']);
+      if(EXCEL_GUIDE_KEYWORDS.some(kw => rowTextLower.includes(kw))){
+        const gp = normalizePhone(rawPhone); if(gp) guidePhones.add(gp); continue;
+      }
+      // 이름 컬럼이 국가/방향 레이블인 경우 가이드 연락처 행으로 간주하여 건너뜀
       if(NAME_PHONE_LABELS.has(rawName.toLowerCase())) continue;
 
       const phone = normalizePhone(rawPhone);
+      // 가이드 전화번호가 다른 형식으로 재등장할 경우 차단
+      if(phone && guidePhones.has(phone)) continue;
       const name  = (rawName && rawName !== '이름 미확인') ? rawName : '이름 미확인';
       const nameUnconfirmed = !rawName;
       const noteBits = [];
