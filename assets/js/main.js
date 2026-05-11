@@ -372,6 +372,9 @@ async function parseExcelFile(file){
       // 이름 또는 행 내 셀에 가이드 키워드 포함 시 해당 행 건너뜀
       const rowTextLower = row.map(v => cellStr(v)).join(' ').toLowerCase();
       if(EXCEL_GUIDE_KEYWORDS.some(kw => rowTextLower.includes(kw))) continue;
+      // 이름 컬럼이 국가/방향 레이블(한국, 일본 등)인 경우 가이드 연락처 행으로 간주하여 건너뜀
+      const NAME_PHONE_LABELS = new Set(['한국','일본','국내','해외','현지','korea','japan']);
+      if(NAME_PHONE_LABELS.has(rawName.toLowerCase())) continue;
 
       const phone = normalizePhone(rawPhone);
       const name  = (rawName && rawName !== '이름 미확인') ? rawName : '이름 미확인';
