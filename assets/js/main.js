@@ -177,13 +177,10 @@ function buildGroupPreview(){
   const t = state.currentTravelInfo;
   // 미리보기 표시 직전 ".." 방어 (저장 경로 외 우회 케이스 대비)
   const safeDepDate = (t.depDate || '').replace(/\.{2,}/g, '.');
-  const depKor = formatDepDateKorean(safeDepDate);
-  const depDow = depDayOfWeek(safeDepDate);
-  const depDisplay = depKor ? (depDow ? `${depKor}(${depDow})` : depKor) : '출발일';
   // 기간: "2박3일" → "3일", "4일" → "4일" (미리보기에서 일수만 표시)
   const durRaw = normalizeDuration(t.duration || '');
   const durPreview = durRaw.replace(/\d+박(\d+일)/, '$1');
-  const preview = `${depDisplay}${t.destination || '여행지'}${durPreview || '기간'}${t.agency || '여행사'}`;
+  const preview = `${safeDepDate || '출발일'}${t.destination || '여행지'}${durPreview || '기간'}${t.agency || '여행사'}`;
   document.getElementById('groupPreview').textContent = preview;
   saveState();
 }
@@ -1808,7 +1805,7 @@ function resolveTags(raw, context={}){
 
   const rep = {
     '{이름}': firstName,
-    '{출발일}': formatDepDateKorean(info.depDate) || '{출발일}',
+    '{출발일}': (() => { const k=formatDepDateKorean(info.depDate); const d=depDayOfWeek(info.depDate); return k ? (d ? `${k}(${d})` : k) : '{출발일}'; })(),
     '{출발일요일}': depDayOfWeek(info.depDate) || '{출발일요일}',
     '{여행지}': info.destination || '{여행지}',
     '{기간}': normalizeDuration(info.duration) || '{기간}',
