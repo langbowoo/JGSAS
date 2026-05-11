@@ -12,8 +12,10 @@
    - Github 수동 배포/업데이트 전제
 ========================================================= */
 function normalizeTravelInfoFromForm(){
-  // depDate: 숫자와 "." 만 허용, ".." 이상 연속 점 → "." 1개로 정규화
-  const rawDepDate = document.getElementById('depDate').value.trim();
+  // depDate: "M월D일(요일)" 표시 포맷 → 내부 저장 포맷 "M.D" 로 역변환
+  let rawDepDate = document.getElementById('depDate').value.trim();
+  const mKor = rawDepDate.match(/^(\d{1,2})월\s*(\d{1,2})일/);
+  if(mKor) rawDepDate = `${parseInt(mKor[1],10)}.${parseInt(mKor[2],10)}`;
   state.currentTravelInfo.depDate = rawDepDate
     .replace(/[^\d.]/g, '')   // 숫자·점 외 문자 제거
     .replace(/\.{2,}/g, '.');  // ".." 이상 → "."
@@ -175,10 +177,13 @@ function buildGroupPreview(){
   const t = state.currentTravelInfo;
   // 미리보기 표시 직전 ".." 방어 (저장 경로 외 우회 케이스 대비)
   const safeDepDate = (t.depDate || '').replace(/\.{2,}/g, '.');
+  const depKor = formatDepDateKorean(safeDepDate);
+  const depDow = depDayOfWeek(safeDepDate);
+  const depDisplay = depKor ? (depDow ? `${depKor}(${depDow})` : depKor) : '출발일';
   // 기간: "2박3일" → "3일", "4일" → "4일" (미리보기에서 일수만 표시)
   const durRaw = normalizeDuration(t.duration || '');
   const durPreview = durRaw.replace(/\d+박(\d+일)/, '$1');
-  const preview = `${safeDepDate || '출발일'}${t.destination || '여행지'}${durPreview || '기간'}${t.agency || '여행사'}`;
+  const preview = `${depDisplay}${t.destination || '여행지'}${durPreview || '기간'}${t.agency || '여행사'}`;
   document.getElementById('groupPreview').textContent = preview;
   saveState();
 }
@@ -1153,6 +1158,13 @@ function autofillTravelForm(info){
   });
   // state 동기화
   normalizeTravelInfoFromForm();
+  // depDate 필드 표시 포맷: "M.D" → "M월D일(요일)"
+  const depEl = document.getElementById('depDate');
+  if(depEl && depEl.value){
+    const kor = formatDepDateKorean(depEl.value);
+    const dow = depDayOfWeek(depEl.value);
+    depEl.value = dow ? `${kor}(${dow})` : kor;
+  }
   buildGroupPreview();
   return { filled, skipped };
 }
