@@ -342,5 +342,14 @@ Mobile PWA HTML App
 
 <script src="./assets/js/core.js"></script>
 <script src="./assets/js/main.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js');
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!refreshing) { refreshing = true; location.reload(); }
+    });
+  }
+</script>
 </body>
 </html>
