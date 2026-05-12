@@ -141,8 +141,18 @@ function switchTab(name, fromHistory){
 
 function normalizeDuration(v){ if(!v) return ''; return /^\d+$/.test(v) ? `${v}일` : v; }
 function formatDepDateKorean(dateStr){
-  const m = String(dateStr || '').trim().match(/^(\d{1,2})[.\/-](\d{1,2})$/);
-  if(!m) return dateStr || '';
+  const s = String(dateStr || '').trim();
+  // 이미 "(목)" 등 요일 패턴이 포함된 경우: 날짜 부분만 변환하고 요일을 그대로 복원
+  // → 호출부에서 depDayOfWeek가 ""를 반환하므로 요일 중복 추가 방지
+  const dowSuffix = s.match(/(\([일월화수목금토]\))$/);
+  if(dowSuffix){
+    const base = s.slice(0, s.length - dowSuffix[1].length).trim();
+    const m = base.match(/^(\d{1,2})[.\/-](\d{1,2})$/);
+    const formatted = m ? `${parseInt(m[1],10)}월${parseInt(m[2],10)}일` : base;
+    return `${formatted}${dowSuffix[1]}`;
+  }
+  const m = s.match(/^(\d{1,2})[.\/-](\d{1,2})$/);
+  if(!m) return s || '';
   return `${parseInt(m[1],10)}월${parseInt(m[2],10)}일`;
 }
 function depDayOfWeek(dateStr){
