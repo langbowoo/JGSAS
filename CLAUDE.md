@@ -1,6 +1,6 @@
 # CLAUDE.md — JGSAS
 
-> 마지막 업데이트: 2026-05-13 | 버전: v2.9
+> 마지막 업데이트: 2026-08-17 | 버전: v2.10
 
 ---
 
@@ -40,7 +40,7 @@
 └── CLAUDE.md
 ```
 
-**탭 구성**: 여행일정(`schedule`) / 문자(`sms`) / 관리(`manage`) / 템플릿(`template`)
+**탭 구성**: 여행일정(`schedule`) / 문자(`sms`) / 템플릿(`template`) / 날씨·지진(`weather`)
 
 ---
 
@@ -109,6 +109,6 @@ git add . && git commit -m "feat: ..." && git push
 
 | 버전 | 주요 변경 |
 |------|-----------|
-| v2.7 | 관리탭 연락처 카드 버튼 UI 개편: 저장✓ 배지 제거, 해피콜 버튼 초록 스타일 통일, 해피콜 클릭 시 state.happyCallLogs 저장(그룹별·인원별) + tel: 전화, 완료 시 두 버튼 모두 .cc-btn-done 비활성 스타일, 그룹 삭제 시 happyCallLogs 정리 |
 | v2.8 | 출발일 포맷 "5월14일(목)" 형식 통일(formatDepDateKorean 신설), 가이드 번호 오추출 방지 강화(GUIDE_SKIP_KEYWORDS·STOPWORDS 확장), 항공편 정규식 숫자+문자 혼합 코드 인식([A-Z0-9]{2}), PHONE_HEADERS 확장, autofillTravelForm·parseExcelFile 버그 수정 |
 | v2.9 | Service Worker 추가(자동 업데이트·네트워크 우선 캐시), formatDepDateKorean 요일 중복 방지(폰 버그 수정), SW 캐시 GET 전용 한정 |
+| v2.10 | 관리(manage)탭 완전 제거(index.html 탭 버튼·섹션 삭제, main.js 방어 코드로 대체), 날씨·지진 탭 신규 추가(weather.js — Open-Meteo 실시간 날씨+4일 예보, 지역 직접 검색, 규칙 기반 챗봇, P2P地震情報 API로 일본 최근 지진 8건 표시) |
