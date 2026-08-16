@@ -96,7 +96,6 @@ Mobile PWA HTML App
   <nav class="tabs">
     <button class="tab active" data-tab="schedule">여행일정</button>
     <button class="tab" data-tab="sms">문자</button>
-    <button class="tab" data-tab="manage">관리</button>
     <button class="tab" data-tab="template">템플릿</button>
   </nav>
 
@@ -252,29 +251,6 @@ Mobile PWA HTML App
         <button class="btn btn-ghost" id="markCurrentPendingBtn" disabled style="display:none">미발송 처리 후 다음</button>
       </div>
     </div>
-  </section>
-
-  <section id="page-manage" class="page">
-    <div class="kpi-grid" style="margin-bottom:12px">
-      <div class="kpi" style="cursor:pointer" onclick="showKpiDetail('groups')"><span>그룹</span><strong id="kpiGroups">0</strong></div>
-      <div class="kpi" style="cursor:pointer" onclick="showKpiDetail('success')"><span>발송</span><strong id="kpiSuccess">0</strong></div>
-      <div class="kpi" style="cursor:pointer" onclick="showKpiDetail('pending')"><span>미발송</span><strong id="kpiPending">0</strong></div>
-      <div class="kpi" style="cursor:pointer" onclick="showKpiDetail('happy')"><span>해피콜</span><strong id="kpiHappy">0</strong></div>
-      <div class="kpi" style="cursor:pointer" onclick="showKpiDetail('vcf')"><span>폰저장</span><strong id="kpiVcf">0</strong></div>
-    </div>
-    <div class="card">
-      <div class="card-title"><span>검색 / 필터</span></div>
-      <div class="search-row">
-        <input class="input" id="manageSearch" placeholder="여행지, 출발일, 이름, 번호 검색">
-        <select id="manageFilter" class="select" style="max-width:170px">
-          <option value="all">전체</option>
-          <option value="moveGroup">그룹이동</option>
-          <option value="deleteGroup">그룹삭제</option>
-        </select>
-      </div>
-    </div>
-    <div id="manageGroups"></div>
-    <div id="manageEmpty" class="empty">저장된 그룹이 없습니다.</div>
   </section>
 
   <section id="page-template" class="page">

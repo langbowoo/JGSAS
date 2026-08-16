@@ -2515,6 +2515,8 @@ function getGroupStats(groupId){
 }
 
 function renderManagePage(){
+  // [관리 탭 제거] 화면(#page-manage)이 더 이상 없으므로, 다른 코드에서 호출돼도 조용히 무시
+  if(!document.getElementById('manageGroups')) return;
   const search = document.getElementById('manageSearch').value.trim().toLowerCase();
   const filter = document.getElementById('manageFilter').value;
   const wrap = document.getElementById('manageGroups');
@@ -2835,8 +2837,9 @@ function bindEvents(){
   document.getElementById('markCurrentFailBtn').addEventListener('click', ()=>advanceQueue('fail'));
   document.getElementById('markCurrentPendingBtn').addEventListener('click', ()=>advanceQueue('pending'));
   
-  document.getElementById('manageSearch').addEventListener('input', renderManagePage);
-  document.getElementById('manageFilter').addEventListener('change', function(){
+  // [관리 탭 제거] 엘리먼트가 없으면 리스너 등록을 건너뛰어 이후 초기화가 멈추지 않도록 함
+  if(document.getElementById('manageSearch')) document.getElementById('manageSearch').addEventListener('input', renderManagePage);
+  if(document.getElementById('manageFilter')) document.getElementById('manageFilter').addEventListener('change', function(){
     const filter = this.value;
     renderManagePage();
     if(filter === 'moveGroup'){
@@ -2940,7 +2943,7 @@ loadExtractionTemplates();
    popstate 발생 시 state.tab으로 탭 복원.
 ─────────────────────────────────────────────────────── */
 (function initHistoryNav(){
-  const TABS = ['schedule','sms','manage','template'];
+  const TABS = ['schedule','sms','template'];
   // 초기 상태 등록 (replaceState — 스택 추가 없이 현재 항목 교체)
   history.replaceState({ tab: 'schedule' }, '', '');
 
