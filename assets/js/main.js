@@ -135,6 +135,7 @@ function switchTab(name, fromHistory){
   if(name === 'sms') renderSmsArea();
   if(name === 'manage') renderManagePage();
   if(name === 'template') renderTemplatePage();
+  if(name === 'weather') initWeatherPage();
 
   if(!fromHistory) history.pushState({ tab: name }, '', '');
 }
@@ -2943,7 +2944,7 @@ loadExtractionTemplates();
    popstate 발생 시 state.tab으로 탭 복원.
 ─────────────────────────────────────────────────────── */
 (function initHistoryNav(){
-  const TABS = ['schedule','sms','template'];
+  const TABS = ['schedule','sms','template','weather'];
   // 초기 상태 등록 (replaceState — 스택 추가 없이 현재 항목 교체)
   history.replaceState({ tab: 'schedule' }, '', '');
 

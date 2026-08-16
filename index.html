@@ -97,6 +97,7 @@ Mobile PWA HTML App
     <button class="tab active" data-tab="schedule">여행일정</button>
     <button class="tab" data-tab="sms">문자</button>
     <button class="tab" data-tab="template">템플릿</button>
+    <button class="tab" data-tab="weather">날씨·지진</button>
   </nav>
 
   <section id="page-schedule" class="page active">
@@ -263,6 +264,39 @@ Mobile PWA HTML App
     </div>
     <div id="templateList"></div>
   </section>
+
+  <section id="page-weather" class="page">
+    <div class="card">
+      <div class="card-title"><span>지역 선택</span></div>
+      <div class="btn-row" id="weatherRegionButtons"></div>
+      <div class="search-row" style="margin-top:8px">
+        <input class="input" id="weatherRegionSearch" placeholder="다른 지역 검색 (예: 요나고)">
+        <button class="btn btn-ghost" id="weatherRegionSearchBtn">검색</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span id="weatherCardTitle">날씨</span><span class="subtle" id="weatherUpdatedAt"></span></div>
+      <div id="weatherCurrentBox"></div>
+      <div id="weatherForecastBox"></div>
+      <div id="weatherEmpty" class="empty">지역을 선택하면 날씨가 표시됩니다.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>날씨 챗봇</span></div>
+      <div id="weatherChatLog"></div>
+      <div class="search-row" style="margin-top:8px">
+        <input class="input" id="weatherChatInput" placeholder="예: 오사카 내일 날씨">
+        <button class="btn btn-primary" id="weatherChatSendBtn">전송</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>일본 최근 지진</span><button class="btn btn-ghost" id="weatherQuakeRefreshBtn" style="padding:4px 10px;font-size:11px">새로고침</button></div>
+      <div id="weatherQuakeList"></div>
+      <div id="weatherQuakeEmpty" class="empty">지진 정보를 불러오는 중...</div>
+    </div>
+  </section>
 </div>
 
 <!-- 컨택트 상세 모달 -->
@@ -318,6 +352,7 @@ Mobile PWA HTML App
 
 <script src="./assets/js/core.js"></script>
 <script src="./assets/js/main.js"></script>
+<script src="./assets/js/weather.js"></script>
 <script>
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js');
